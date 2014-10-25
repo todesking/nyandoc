@@ -338,6 +338,14 @@ class PlainTextFormatter {
 
       sb.append(" - ")
       appendln(child.id.relNameFrom(item.id))
+
+      child match {
+        case c:ViaImplicitMethod =>
+          appendln(s"    (added by implicit convertion: ${c.originalId})")
+        case c:ViaInheritMethod =>
+          appendln(s"    (defined at ${c.originalId})")
+        case _ =>
+      }
     }
 
     sb.toString
