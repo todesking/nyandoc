@@ -12,6 +12,12 @@ case class Identifier(fullName:String) {
     Identifier(fullName.replaceAll("""[.#][^.#]+$""", ""))
   def isParentOf(id:Identifier) =
     id.parentId == this
+  def isAncestorOf(id:Identifier):Boolean =
+    id.parentId == this || id.parentId.isAncestorOf(this)
+  def nameFrom(parentId:Identifier):String = {
+    require(parentId.isAncestorOf(this))
+    fullName.substring(parentId.fullName.length)
+  }
 }
 
 sealed class TypeKind
@@ -220,7 +226,17 @@ class PlainTextFormatter {
   def format(item:Item, repo:Repository):String = {
     val sb = new scala.collection.mutable.StringBuilder
 
-    sb ++= item.id.fullName
+    def appendln(str:String):Unit = {sb.append(str); sb.append("\n")}
+    def ln():Unit = appendln("")
+
+    appendln(item.id.fullName)
+
+    repo.childrenOf(item).foreach {child =>
+      assert(item.id.isParentOf(child.id))
+
+      sb.append(" - ")
+      appendln(child.id.nameFrom(item.id))
+    }
 
     sb.toString
   }
