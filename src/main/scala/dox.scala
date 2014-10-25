@@ -6,18 +6,109 @@ object LibGlobal {
 }
 import LibGlobal._
 
-case class Identifier(fullName:String) {
-  def asFileName:String = fullName
-  def parentId:Identifier =
-    Identifier(fullName.replaceAll("""[.#][^.#]+$""", ""))
-  def isParentOf(id:Identifier) =
-    id.parentId == this
-  def isAncestorOf(id:Identifier):Boolean =
-    id.parentId == this || id.parentId.isAncestorOf(this)
-  def nameFrom(parentId:Identifier):String = {
-    require(parentId.isAncestorOf(this))
-    fullName.substring(parentId.fullName.length)
+sealed trait Id {
+  def asFileName():String = fullName
+  def isParentOf(id:Id):Boolean
+  def isAncestorOf(id:Id):Boolean
+  def fullName():String
+  def childFullName(name:String):String
+  def relNameFrom(base:Id):String
+}
+
+
+object Id {
+  sealed abstract class Root extends Id {
+    override def fullName = ""
+    override def isParentOf(id:Id):Boolean = id match {
+      case child:Child => child.parentId == this
+      case _:Root => false
+    }
+    override def isAncestorOf(id:Id):Boolean = id match {
+      case _:Root => false
+      case _ => true
+    }
+    override def childFullName(name:String) = name
+    override def relNameFrom(base:Id):String = base match {
+      case _:Root => fullName
+      case _:Child => throw new IllegalArgumentException()
+    }
   }
+  sealed abstract class Child extends Id {
+    val parentId:Id
+    val localName:String
+
+    def changeParent(parent:Id):Child
+
+    override def fullName =
+      parentId.childFullName(localName)
+    override def isParentOf(id:Id):Boolean = id match {
+      case child:Child => child.parentId == this
+      case _:Root => false
+    }
+    override def isAncestorOf(id:Id):Boolean =
+      id match {
+        case child:Child =>
+          isParentOf(child) || isAncestorOf(child.parentId)
+        case _:Root => false
+      }
+    override def relNameFrom(base:Id):String = {
+      require(base.isAncestorOf(this))
+      base match {
+        case _:Root => fullName
+        case _:Child => fullName.substring(base.fullName.length)
+      }
+    }
+  }
+
+  sealed trait Type extends Id {
+    override def childFullName(name:String) =
+      fullName + "#" + name
+  }
+  sealed trait Value extends Id {
+    override def childFullName(name:String) =
+      fullName + "." + name
+  }
+
+  // theres no RootTypeId
+  object Root extends Root with Value {
+    override def childFullName(name:String) = super[Root].childFullName(name)
+  }
+
+  sealed case class ChildValue(
+    override val parentId:Id,
+    override val localName:String
+  ) extends Child with Value {
+    override def changeParent(newParent:Id) =
+      ChildValue(newParent, localName)
+  }
+
+  sealed case class ChildType(
+    override val parentId:Id,
+    override val localName:String
+  ) extends Child with Type {
+    override def changeParent(newParent:Id) =
+      ChildType(newParent, localName)
+  }
+
+  def Type(fullName:CharSequence):ChildType =
+    build(fullName)(ChildType.apply)
+  def Value(fullName:CharSequence):ChildValue =
+    build(fullName)(ChildValue.apply)
+
+  private def build[A <: Id](fullName:CharSequence)(builder:(Id, String) => A):A =
+    """([.#])([^.#]+)$""".r.findFirstMatchIn(fullName) match {
+      case Some(m) =>
+        if(m.group(1) == ".") builder(Value(m.before), m.group(2))
+        else builder(Type(m.before), m.group(2))
+      case None =>
+        builder(Root, fullName.toString)
+    }
+}
+
+sealed class ItemKind
+object ItemKind {
+  object Type extends ItemKind
+  object Value extends ItemKind
 }
 
 sealed class TypeKind
@@ -58,16 +149,18 @@ class MethodParams
 trait ValueContainer {
 }
 
-sealed abstract class Item(val id:Identifier)
+sealed abstract class Item(val id:Id)
 
-sealed class Value(id:Identifier/*, tpe:TypeInstance*/) extends Item(id)
+sealed class Value(id:Id.Value/*, tpe:TypeInstance*/) extends Item(id)
 
-case class Type(override val id:Identifier) extends Item(id)
+case class Type(override val id:Id.Type) extends Item(id)
 
-case class Object(override val id:Identifier) extends Value(id) with ValueContainer
-case class Method(override val id:Identifier) extends Value(id)
+case class Object(override val id:Id.Value) extends Value(id) with ValueContainer
+case class DefinedMethod(override val id:Id.Value) extends Value(id)
+case class ViaImplicitMethod(override val id:Id.Value, originalId:Id.Value) extends Value(id)
+case class ViaInheritMethod(override val id:Id.Value, originalId:Id.Value) extends Value(id)
 
-case class Package(override val id:Identifier) extends Value(id)
+case class Package(override val id:Id.Value) extends Value(id)
 
 trait Repository {
   def isTopLevel(item:Item) = {
@@ -84,11 +177,14 @@ trait Repository {
 
 object Repository {
   def apply(items:Seq[Item]):Repository = {
-    val id2item:Map[Identifier, Item] =
+    val id2item:Map[Id, Item] =
       items.map{item => item.id -> item}.toMap
     new Repository {
       override def parentOf(item:Item):Option[Item] =
-        id2item.get(item.id.parentId)
+        item.id match {
+          case Id.Root => None
+          case child:Id.Child => id2item.get(child.parentId)
+        }
       override def childrenOf(item:Item):Seq[Item] =
         id2item.filter {case (id, _) => item.id.isParentOf(id) }.map{case (_, item) => item}.toSeq
     }
@@ -140,24 +236,30 @@ object HtmlParser {
     val kind:String = doc / "#signature > .modifier_kind > .kind" first() text()
     val entity =
       kind match {
-        case "trait" | "class" => new Type(Identifier(s"${ns}.${name}"))
-        case "object" => Object(Identifier(s"${ns}.${name}$$"))
+        case "trait" | "class" => new Type(Id.Type(s"${ns}.${name}"))
+        case "object" => Object(Id.Value(s"${ns}.${name}$$"))
         case unk => errorUnknown("TypeKind", unk)
       }
-    Seq(entity) ++ extractValueMembers(doc)
+    entity +: extractValueMembers(entity.id, doc)
   }
 
   def extractNS(doc:Document):String = {
     doc / "#definition #owner a.extype" last() attr("name")
   }
 
-  def extractValueMembers(doc:Document):Seq[Item] = {
+  def extractValueMembers(parentId:Id, doc:Document):Seq[Item] = {
     (doc / "#values > ol > li").map {elm =>
-      val id = Identifier(elm.attr("name"))
+      val id = Id.Value(elm.attr("name"))
       val kind = ValueKind.fromName(
-        elm / ".signature .modifier_kind .kind" first() text())
+        elm / ".signature > .modifier_kind > .kind" first() text())
       kind match {
-        case ValueKind.Def | ValueKind.Val | ValueKind.Var => Method(id)
+        case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
+          if(parentId.isParentOf(id))
+            DefinedMethod(id)
+          else if((elm / ".signature > .symbol > .implicit").nonEmpty)
+            ViaImplicitMethod(id.changeParent(parentId), id)
+          else
+            ViaInheritMethod(id.changeParent(parentId), id)
         case ValueKind.Object => Object(id)
       }
     }
@@ -235,7 +337,7 @@ class PlainTextFormatter {
       assert(item.id.isParentOf(child.id))
 
       sb.append(" - ")
-      appendln(child.id.nameFrom(item.id))
+      appendln(child.id.relNameFrom(item.id))
     }
 
     sb.toString
