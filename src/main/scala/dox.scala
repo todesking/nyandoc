@@ -2,11 +2,17 @@ package com.todesking.dox
 
 object LibGlobal {
   def errorUnknown(name:String, unk:String) =
-    throw new RuntimeException(s"Unknown ${name}: unk")
+    throw new RuntimeException(s"Unknown ${name}: ${unk}")
 }
 import LibGlobal._
 
-case class Identifier(fullName:String)
+case class Identifier(fullName:String) {
+  def asFileName:String = fullName
+  def parentId:Identifier =
+    Identifier(fullName.replaceAll("""[.#][^.#]+$""", ""))
+  def isParentOf(id:Identifier) =
+    id.parentId == this
+}
 
 sealed class TypeKind
 object TypeKind {
@@ -46,13 +52,42 @@ class MethodParams
 trait ValueContainer {
 }
 
-sealed class Item(val id:Identifier)
+sealed abstract class Item(val id:Identifier)
 
 sealed class Value(id:Identifier/*, tpe:TypeInstance*/) extends Item(id)
+
 case class Type(override val id:Identifier) extends Item(id)
 
 case class Object(override val id:Identifier) extends Value(id) with ValueContainer
 case class Method(override val id:Identifier) extends Value(id)
+
+case class Package(override val id:Identifier) extends Value(id)
+
+trait Repository {
+  def isTopLevel(item:Item) = {
+    parentOf(item) match {
+      case Some(_:Package) => true
+      case Some(_) => false
+      case None => true
+    }
+  }
+
+  def parentOf(item:Item):Option[Item]
+  def childrenOf(item:Item):Seq[Item]
+}
+
+object Repository {
+  def apply(items:Seq[Item]):Repository = {
+    val id2item:Map[Identifier, Item] =
+      items.map{item => item.id -> item}.toMap
+    new Repository {
+      override def parentOf(item:Item):Option[Item] =
+        id2item.get(item.id.parentId)
+      override def childrenOf(item:Item):Seq[Item] =
+        id2item.filter {case (id, _) => item.id.isParentOf(id) }.map{case (_, item) => item}.toSeq
+    }
+  }
+}
 
 
 object Crawler {
@@ -78,7 +113,7 @@ object JsoupExt {
   implicit def Elements2Collection(self:Elements) = self.asScala
 }
 
-class HtmlParser {
+object HtmlParser {
   import java.io.File
   import java.nio.charset.{Charset, StandardCharsets}
   import org.jsoup.Jsoup
@@ -113,11 +148,80 @@ class HtmlParser {
   def extractValueMembers(doc:Document):Seq[Item] = {
     (doc / "#values > ol > li").map {elm =>
       val id = Identifier(elm.attr("name"))
-      val kind = ValueKind.fromName(elm / ".signature .modifier_kind .kind" text())
+      val kind = ValueKind.fromName(
+        elm / ".signature .modifier_kind .kind" first() text())
       kind match {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var => Method(id)
         case ValueKind.Object => Object(id)
       }
     }
+  }
+}
+
+object Main {
+  import java.io.File
+
+  def main(args:Array[String]):Unit = {
+    if(args.size != 2) {
+      println("USAGE: $0 <scaladoc-dir|scaladoc-html> <dest-dir>")
+    } else {
+      val src = new File(args(0))
+      val dest = new File(args(1))
+
+      val items = parse(src)
+      val repo = Repository(items)
+
+      generate(items, repo, dest)
+    }
+  }
+
+  def parse(file:File):Seq[Item] = {
+    if(file.isDirectory) {
+      file.listFiles.flatMap(parse(_))
+    } else {
+      parse0(file)
+    }
+  }
+
+  def parse0(file:File):Seq[Item] = {
+    HtmlParser.parse(file)
+  }
+
+  def generate(items:Seq[Item], repo:Repository, dest:File):Unit = {
+    if(!dest.exists)
+      dest.mkdirs()
+
+    items.foreach {item =>
+      if(repo.isTopLevel(item))
+        generate0(item, repo, dest)
+    }
+  }
+
+  def generate0(top:Item, repo:Repository, destDir:File):Unit = {
+    val content = new PlainTextFormatter().format(top, repo)
+
+    import java.io._
+    val dest:File = new File(destDir, top.id.asFileName)
+    println()
+    println(s"===================== ${dest} ========================")
+    println(content)
+    return
+
+    val writer = new BufferedWriter(new FileWriter(dest))
+    try {
+      writer.write(content)
+    } finally {
+      writer.close()
+    }
+  }
+}
+
+class PlainTextFormatter {
+  def format(item:Item, repo:Repository):String = {
+    val sb = new scala.collection.mutable.StringBuilder
+
+    sb ++= item.id.fullName
+
+    sb.toString
   }
 }
