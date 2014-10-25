@@ -13,6 +13,7 @@ sealed trait Id {
   def fullName():String
   def childFullName(name:String):String
   def relNameFrom(base:Id):String
+  override def toString = fullName
 }
 
 
