@@ -11,6 +11,7 @@ sealed trait Id {
   def isParentOf(id:Id):Boolean
   def isAncestorOf(id:Id):Boolean
   def fullName():String
+  def localName():String
   def childFullName(name:String):String
   def relNameFrom(base:Id):String
   override def toString = fullName
@@ -20,6 +21,7 @@ sealed trait Id {
 object Id {
   sealed abstract class Root extends Id {
     override def fullName = ""
+    override def localName = ""
     override def isParentOf(id:Id):Boolean = id match {
       case child:Child => child.parentId == this
       case _:Root => false
@@ -36,7 +38,7 @@ object Id {
   }
   sealed abstract class Child extends Id {
     val parentId:Id
-    val localName:String
+    override val localName:String
 
     def changeParent(parent:Id):Child
 
@@ -150,27 +152,31 @@ object Scope {
   case class Public() extends Scope
 }
 
-case class TypeParams(override val toString:String)
-class MethodParams
+case class TypeParams(signature:String)
+case class MethodParams(signature:String)
+case class ResultType(signature:String)
 
 trait ValueContainer {
 }
 
 sealed abstract class Item(val id:Id) {
-  def signature:String = id match { case cid:Id.Child => cid.localName; case _:Id.Root => ""}
+  def signature:String = id.localName
 }
 
 sealed class Value(id:Id.Value/*, tpe:TypeInstance*/) extends Item(id)
 
 case class Type(override val id:Id.Type, kind:TypeKind, params:TypeParams) extends Item(id) {
   override def signature:String =
-    kind.signature + " " + (id match { case c:Id.Child => c.localName }) + params.toString
+    kind.signature + " " + id.localName + params.signature
 }
 
 case class Object(override val id:Id.Value) extends Value(id) with ValueContainer
-case class DefinedMethod(override val id:Id.Value) extends Value(id)
-case class ViaImplicitMethod(override val id:Id.Value, originalId:Id.Value) extends Value(id)
-case class ViaInheritMethod(override val id:Id.Value, originalId:Id.Value) extends Value(id)
+abstract class Method(id:Id.Value, params:MethodParams, resultType:ResultType) extends Value(id) {
+  override def signature = s"def ${id.localName}${params.signature}: ${resultType.signature}"
+}
+case class DefinedMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType) extends Method(id, params, resultType)
+case class ViaImplicitMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, originalId:Id.Value) extends Method(id, params, resultType)
+case class ViaInheritMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, originalId:Id.Value) extends Method(id, params, resultType)
 
 case class Package(override val id:Id.Value) extends Value(id)
 
@@ -277,12 +283,14 @@ object HtmlParser {
         elm / ".signature > .modifier_kind > .kind" first() text())
       kind match {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
+          val params = MethodParams(elm / ".signature > .symbol > .params" text())
+          val resultType = ResultType(elm / ".signature > .symbol > .result" text() replaceAll("^: ", ""))
           if(parentId.isParentOf(id))
-            DefinedMethod(id)
+            DefinedMethod(id, params, resultType)
           else if((elm / ".signature > .symbol > .implicit").nonEmpty)
-            ViaImplicitMethod(id.changeParent(parentId), id)
+            ViaImplicitMethod(id.changeParent(parentId), params, resultType, id)
           else
-            ViaInheritMethod(id.changeParent(parentId), id)
+            ViaInheritMethod(id.changeParent(parentId), params, resultType, id)
         case ValueKind.Object => Object(id)
       }
     }
@@ -361,7 +369,7 @@ class PlainTextFormatter {
       assert(item.id.isParentOf(child.id))
 
       sb.append(" - ")
-      appendln(child.id.relNameFrom(item.id))
+      appendln(child.signature)
 
       child match {
         case c:ViaImplicitMethod =>
