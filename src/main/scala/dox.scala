@@ -414,14 +414,14 @@ class PlainTextFormatter {
 
     appendln(item.id.fullName)
     appendln(item.signature)
-    item.comment.map(_.toString).foreach(appendln(_))
+    item.comment.map(formatMarkup(_)).foreach(appendln(_))
 
     repo.childrenOf(item).foreach {child =>
       assert(item.id.isParentOf(child.id))
 
       sb.append(" - ")
       appendln(child.signature)
-      child.comment.map(_.toString).foreach(appendln(_))
+      child.comment.map(formatMarkup(_)).foreach(appendln(_))
 
       child match {
         case c:ViaImplicitMethod =>
@@ -433,5 +433,17 @@ class PlainTextFormatter {
     }
 
     sb.toString
+  }
+
+  def formatMarkup(markups:Seq[Markup]):String =
+    markups.map(formatMarkup(_)).mkString("\n")
+  def formatMarkup(markup:Markup):String = markup match {
+    case Markup.Text(content) => content
+    case Markup.Paragraph(children) =>
+      children.map(formatMarkup(_)).mkString("\n\n")
+    case Markup.Dl(items) =>
+      items.map {item =>
+        formatMarkup(item.dt) + "\n" + "    " + formatMarkup(item.dd)
+      } mkString("\n")
   }
 }
