@@ -44,7 +44,7 @@ object Id {
 
     def changeParent(parent:Id):Child
 
-    override def fullName =
+    override val fullName =
       parentId.childFullName(localName)
     override def isParentOf(id:Id):Boolean = id match {
       case child:Child => child.parentId == this
