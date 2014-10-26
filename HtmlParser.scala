@@ -134,8 +134,14 @@ object HtmlParser {
         Seq(Bold(extractMarkup(e)))
       case Tag("i", e) =>
         Seq(Italic(extractMarkup(e)))
+      case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example
+        e / "> li.cmt > p > code" firstOpt() map {oneline =>
+          Seq(Code(oneline.text()))
+        } getOrElse {
+          Seq(Code(e / "> li.cmt > pre" text()))
+        }
       case e:Element => // Treat as text if unknown element
-        unsupportedFeature("markup tag", e.tagName)
+        unsupportedFeature("markup tag", e.toString)
         Seq(Text(e.cleanText()))
     }.flatten
   }
