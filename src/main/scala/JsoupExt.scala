@@ -2,7 +2,7 @@ package com.todesking.dox
 
 object JsoupExt {
   import org.jsoup.select.Elements
-  import org.jsoup.nodes.Element
+  import org.jsoup.nodes.{Element, Node}
   import scala.collection.JavaConverters._
 
   import scala.language.implicitConversions
@@ -29,9 +29,9 @@ object JsoupExt {
         lowercase
       }
     }
-    def unapply(n:org.jsoup.nodes.Node): Option[String] = {
+    def unapply(n:Node): Option[(String, Element)] = {
       n match {
-        case e:Element => Some(toLowerCase(e.tagName))
+        case e:Element => Some(toLowerCase(e.tagName), e)
         case _ => None
       }
     }

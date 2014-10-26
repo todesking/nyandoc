@@ -107,21 +107,21 @@ object HtmlParser {
     import org.jsoup.{nodes => n}
     elm.childNodes.asScala.collect {
       case c:n.TextNode => Seq(Text(c.text()))
-      case c@Tag("p") =>
-        Seq(Paragraph(extractMarkup(c)))
-      case c@Tag("dl") =>
-        Seq(extractDlMarkup(c))
-      case c@Tag("a") =>
+      case Tag("p", e) =>
+        Seq(Paragraph(extractMarkup(e)))
+      case Tag("dl", e) =>
+        Seq(extractDlMarkup(e))
+      case Tag("a", e) =>
         // TODO: support LinkInternal
-        Seq(LinkExternal(c.asInstanceOf[Element].text(), c.attr("href")))
-      case c@Tag("span") =>
-        Seq(Text(c.asInstanceOf[Element].text()))
-      case c@Tag("br") =>
+        Seq(LinkExternal(e.asInstanceOf[Element].text(), e.attr("href")))
+      case Tag("span", e) =>
+        Seq(Text(e.asInstanceOf[Element].text()))
+      case Tag("br", e) =>
         Seq()
-      case c@Tag("div") =>
-        extractMarkup(c)
-      case c@Tag("pre") =>
-        Seq(Code(c.asInstanceOf[Element] text()))
+      case Tag("div", e) =>
+        extractMarkup(e)
+      case Tag("pre", e) =>
+        Seq(Code(e.asInstanceOf[Element] text()))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.tagName)
         Seq(Text(e.text()))
@@ -134,9 +134,9 @@ object HtmlParser {
     var dtPrev:org.jsoup.nodes.Node = null
     val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
     dl.childNodes.asScala.foreach {
-      case dt@Tag("dt") =>
+      case Tag("dt", dt) =>
         dtPrev = dt
-      case dd@Tag("dd") =>
+      case Tag("dd", dd) =>
         if(dtPrev != null) {
           items += Markup.DlItem(extractMarkup(dtPrev), extractMarkup(dd))
           dtPrev = null
