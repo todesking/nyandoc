@@ -1,7 +1,5 @@
 package com.todesking.dox
 
-import LibGlobal._
-import scala.collection.JavaConverters._
 
 object HtmlParser {
   import java.io.File
@@ -9,7 +7,9 @@ object HtmlParser {
   import org.jsoup.Jsoup
   import org.jsoup.nodes.{Document, Element}
 
+  import LibGlobal._
   import JsoupExt._
+  import scala.collection.JavaConverters._
 
   def parse(file:File, charset:Charset = StandardCharsets.UTF_8):Seq[Item] = {
     import java.io._
