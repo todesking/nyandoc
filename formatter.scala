@@ -40,5 +40,11 @@ class PlainTextFormatter {
       items.map {item =>
         formatMarkup(item.dt) + "\n" + "    " + formatMarkup(item.dd)
       } mkString("\n")
+    case Markup.Code(content) =>
+      content.split("\n").map("  " + _).mkString("\n")
+    case Markup.LinkInternal(title, id) =>
+      s"[${title}](${id.fullName})"
+    case Markup.LinkExternal(title, url) =>
+      s"[${title}](${url})"
   }
 }
