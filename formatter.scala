@@ -8,7 +8,7 @@ object Markdown {
     |
     |""".stripMargin
 
-  def inlineCode(str:String):String = s"`${str}`"
+  def inlineCode(str:String):String = s"`${cleanup(str)}`"
 
   def h(level:Int)(str:String):String = ("#" * level) + " " + str + "\n\n"
 
@@ -69,6 +69,8 @@ class MarkdownFormatter {
         definitionList(items.map {item => (formatMarkup(item.dt), formatMarkup(item.dd))})
       case Markup.Code(content) =>
         code(content)
+      case Markup.CodeInline(content) =>
+        inlineCode(content)
       case Markup.LinkInternal(title, id) =>
         link(title, id.fullName)
       case Markup.LinkExternal(title, url) =>

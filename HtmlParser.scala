@@ -128,6 +128,8 @@ object HtmlParser {
           extractMarkup(e)
       case Tag("pre", e) =>
         Seq(Code(e.text()))
+      case Tag("code", e) =>
+        Seq(CodeInline(e.text()))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.tagName)
         Seq(Text(e.cleanText()))
