@@ -113,7 +113,7 @@ object HtmlParser {
       case Tag("p", e) =>
         Seq(Paragraph(extractMarkup(e)))
       case Tag("dl", e) =>
-        Seq(extractDlMarkup(e))
+        extractDlMarkup(e)
       case Tag("a", e) =>
         // TODO: support LinkInternal
         Seq(LinkExternal(e.text(), e.attr("href")))
@@ -136,11 +136,12 @@ object HtmlParser {
     }.flatten
   }
 
-  def extractDlMarkup(dl:org.jsoup.nodes.Node):Markup = {
+  def extractDlMarkup(dl:org.jsoup.nodes.Node):Seq[Markup] = {
     import org.jsoup.{nodes => n}
 
     var dtPrev:org.jsoup.nodes.Node = null
     val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
+    val others = new scala.collection.mutable.ArrayBuffer[Markup]
     dl.childNodes.asScala.foreach {
       case Tag("dt", dt) =>
         dtPrev = dt
@@ -149,10 +150,15 @@ object HtmlParser {
           items += Markup.DlItem(extractMarkup(dtPrev), extractMarkup(dd))
           dtPrev = null
         }
+      case Tag("div", div) if(div.hasClass("full-signature-block")) =>
+        // junk
+      case Tag("div", div) if(div.hasClass("block")) =>
+        // code example
+        others ++= extractMarkup(div)
       case t:n.TextNode =>
       case other =>
         unsupportedFeature("markup(dl)", other.toString)
     }
-    return Markup.Dl(items)
+    return Markup.Dl(items) +: others
   }
 }
