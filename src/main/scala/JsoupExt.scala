@@ -9,6 +9,8 @@ object JsoupExt {
 
   implicit class ElementExt[A <: Element](self:A) {
     def /(query:String) = self.select(query)
+    def cleanText():String =
+      """[\s\n]+""".r.replaceAllIn(self.text(), " ")
   }
 
   implicit class ElementsExt[A <: Elements](self:A) {

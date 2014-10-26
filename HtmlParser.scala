@@ -115,9 +115,9 @@ object HtmlParser {
         // TODO: support LinkInternal
         Seq(LinkExternal(e.text(), e.attr("href")))
       case Tag("span", e) =>
-        Seq(Text(e.text()))
+        Seq(Text(e.cleanText()))
       case Tag("br", e) =>
-        Seq()
+        Seq(Text("\n"))
       case Tag("div", e) =>
         extractMarkup(e)
       case Tag("pre", e) =>
