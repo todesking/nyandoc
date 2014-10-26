@@ -1,5 +1,7 @@
 package com.todesking.dox
 
+import scala.collection.JavaConverters._
+
 object LibGlobal {
   def errorUnknown(name:String, unk:String) =
     throw new RuntimeException(s"Unknown ${name}: ${unk}")
@@ -156,26 +158,34 @@ case class TypeParams(signature:String)
 case class MethodParams(signature:String)
 case class ResultType(signature:String)
 
-sealed abstract class Item(val id:Id) {
+sealed abstract class Markup
+object Markup {
+  case class Text(content:String) extends Markup
+  case class Paragraph(children:Seq[Markup]) extends Markup
+  case class Dl(items:Seq[DlItem]) extends Markup
+  case class DlItem(dt:Seq[Markup], dd:Seq[Markup])
+}
+
+sealed abstract class Item(val id:Id, val comment:Seq[Markup]) {
   def signature:String = id.localName
 }
 
-sealed class Value(id:Id.Value/*, tpe:TypeInstance*/) extends Item(id)
+sealed class Value(id:Id.Value, comment:Seq[Markup]) extends Item(id, comment)
 
-case class Type(override val id:Id.Type, kind:TypeKind, params:TypeParams) extends Item(id) {
+case class Type(override val id:Id.Type, kind:TypeKind, params:TypeParams, override val comment:Seq[Markup]) extends Item(id, comment) {
   override def signature:String =
     kind.signature + " " + id.localName + params.signature
 }
 
-case class Object(override val id:Id.Value) extends Value(id)
-abstract class Method(id:Id.Value, params:MethodParams, resultType:ResultType) extends Value(id) {
+case class Object(override val id:Id.Value, override val comment:Seq[Markup]) extends Value(id, comment)
+abstract class Method(id:Id.Value, params:MethodParams, resultType:ResultType, comment:Seq[Markup]) extends Value(id, comment) {
   override def signature = s"def ${id.localName}${params.signature}: ${resultType.signature}"
 }
-case class DefinedMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType) extends Method(id, params, resultType)
-case class ViaImplicitMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, originalId:Id.Value) extends Method(id, params, resultType)
-case class ViaInheritMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, originalId:Id.Value) extends Method(id, params, resultType)
+case class DefinedMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, override val comment:Seq[Markup]) extends Method(id, params, resultType, comment)
+case class ViaImplicitMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, originalId:Id.Value, override val comment:Seq[Markup]) extends Method(id, params, resultType, comment)
+case class ViaInheritMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, originalId:Id.Value, override val comment:Seq[Markup]) extends Method(id, params, resultType, comment)
 
-case class Package(override val id:Id.Value) extends Value(id)
+case class Package(override val id:Id.Value, override val comment:Seq[Markup]) extends Value(id, comment)
 
 trait Repository {
   def isTopLevel(item:Item) = {
@@ -225,9 +235,19 @@ object JsoupExt {
 
   implicit class ElementsExt[A <: Elements](self:A) {
     def /(query:String) = self.select(query)
+    def firstOpt():Option[Element] = Option(self.first())
   }
 
   implicit def Elements2Collection(self:Elements) = self.asScala
+
+  object Tag {
+    def unapply(n:org.jsoup.nodes.Node): Option[String] = {
+      n match {
+        case e:Element => Some(e.tagName.toLowerCase)
+        case _ => None
+      }
+    }
+  }
 }
 
 object HtmlParser {
@@ -250,11 +270,12 @@ object HtmlParser {
     val ns:String = extractNS(doc)
     val fullName = s"${ns}.${name}"
     val kind:String = doc / "#signature > .modifier_kind > .kind" first() text()
+    val comment = extractMarkup(doc / "#comment" first())
     val entity =
       kind match {
         case "trait" | "class" =>
-          extractType(Id.Type(fullName), TypeKind.forName(kind), doc)
-        case "object" => Object(Id.Value(s"${ns}.${name}$$"))
+          extractType(Id.Type(fullName), TypeKind.forName(kind), comment, doc)
+        case "object" => Object(Id.Value(s"${ns}.${name}$$"), comment)
         case unk => errorUnknown("TypeKind", unk)
       }
     entity +: extractValueMembers(entity.id, doc)
@@ -264,9 +285,9 @@ object HtmlParser {
     doc / "#definition #owner a.extype" last() attr("name")
   }
 
-  def extractType(id:Id.Type, kind:TypeKind, doc:Document):Type = {
+  def extractType(id:Id.Type, kind:TypeKind, comment:Seq[Markup], doc:Document):Type = {
     val typeParams = extractTypeParams(doc / "#signature > .symbol > .tparams" first())
-    new Type(id, kind, typeParams)
+    new Type(id, kind, typeParams, comment)
   }
 
   def extractTypeParams(elm:Element):TypeParams = {
@@ -278,19 +299,51 @@ object HtmlParser {
       val id = Id.Value(elm.attr("name"))
       val kind = ValueKind.forName(
         elm / ".signature > .modifier_kind > .kind" first() text())
+      val comment =
+        elm / ".fullcomment" firstOpt() map(extractMarkup(_)) match {
+          case Some(a) => a
+          case None => elm / ".fullcomment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
+        }
       kind match {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
           val params = MethodParams(elm / ".signature > .symbol > .params" text())
           val resultType = ResultType(elm / ".signature > .symbol > .result" text() replaceAll("^: ", ""))
           if(parentId.isParentOf(id))
-            DefinedMethod(id, params, resultType)
+            DefinedMethod(id, params, resultType, comment)
           else if((elm / ".signature > .symbol > .implicit").nonEmpty)
-            ViaImplicitMethod(id.changeParent(parentId), params, resultType, id)
+            ViaImplicitMethod(id.changeParent(parentId), params, resultType, id, comment)
           else
-            ViaInheritMethod(id.changeParent(parentId), params, resultType, id)
-        case ValueKind.Object => Object(id)
+            ViaInheritMethod(id.changeParent(parentId), params, resultType, id, comment)
+        case ValueKind.Object => Object(id, comment)
       }
     }
+  }
+
+  def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] = {
+    import Markup._
+    import org.jsoup.{nodes => n}
+    elm.childNodes.asScala.collect {
+      case c:n.TextNode => Seq(Text(c.text()))
+      case c:n.Element if(c.tagName.toLowerCase == "p") =>
+        Seq(Paragraph(extractMarkup(c)))
+      case c:n.Element if(c.tagName.toLowerCase == "dl") =>
+        Seq(extractDlMarkup(c))
+    }.flatten
+  }
+  def extractDlMarkup(dl:Element):Markup = {
+    var dtPrev:org.jsoup.nodes.Node = null
+    val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
+    dl.childNodes.asScala.foreach {
+      case dt@Tag("dt") =>
+        dtPrev = dt
+      case dd@Tag("dd") =>
+        if(dtPrev != null) {
+          items += Markup.DlItem(extractMarkup(dtPrev), extractMarkup(dd))
+          dtPrev = null
+        }
+      case _ =>
+    }
+    return Markup.Dl(items)
   }
 }
 
@@ -361,12 +414,14 @@ class PlainTextFormatter {
 
     appendln(item.id.fullName)
     appendln(item.signature)
+    item.comment.map(_.toString).foreach(appendln(_))
 
     repo.childrenOf(item).foreach {child =>
       assert(item.id.isParentOf(child.id))
 
       sb.append(" - ")
       appendln(child.signature)
+      child.comment.map(_.toString).foreach(appendln(_))
 
       child match {
         case c:ViaImplicitMethod =>
