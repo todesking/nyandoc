@@ -328,6 +328,8 @@ object HtmlParser {
         Seq(Paragraph(extractMarkup(c)))
       case c:n.Element if(c.tagName.toLowerCase == "dl") =>
         Seq(extractDlMarkup(c))
+      case e:Element => // Treat as text if unknown element
+        Seq(Text(e.text()))
     }.flatten
   }
   def extractDlMarkup(dl:Element):Markup = {
@@ -436,7 +438,7 @@ class PlainTextFormatter {
   }
 
   def formatMarkup(markups:Seq[Markup]):String =
-    markups.map(formatMarkup(_)).mkString("\n")
+    markups.map(formatMarkup(_)).mkString("")
   def formatMarkup(markup:Markup):String = markup match {
     case Markup.Text(content) => content
     case Markup.Paragraph(children) =>
