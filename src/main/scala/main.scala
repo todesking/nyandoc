@@ -48,14 +48,10 @@ object Main {
   }
 
   def generate0(top:Item, repo:Repository, destDir:File):Unit = {
-    val content = new PlainTextFormatter().format(top, repo)
+    val content = new MarkdownFormatter().format(top, repo)
 
     import java.io._
-    val dest:File = new File(destDir, top.id.asFileName)
-    println()
-    println(s"===================== ${dest} ========================")
-    println(content)
-    return
+    val dest:File = new File(destDir, top.id.asFileName + ".md")
 
     val writer = new BufferedWriter(new FileWriter(dest))
     try {

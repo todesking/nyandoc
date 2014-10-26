@@ -1,6 +1,6 @@
 package com.todesking.dox
 
-class PlainTextFormatter {
+class MarkdownFormatter {
   def format(item:Item, repo:Repository):String = {
     val sb = new scala.collection.mutable.StringBuilder
 
