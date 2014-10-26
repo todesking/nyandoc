@@ -112,11 +112,17 @@ object ItemKind {
   object Value extends ItemKind
 }
 
-sealed class TypeKind
+sealed class TypeKind(val signature:String)
 object TypeKind {
-  case object Trait extends TypeKind
-  case object Class extends TypeKind
-  case object Type extends TypeKind
+  case object Trait extends TypeKind("trait")
+  case object Class extends TypeKind("class")
+  case object Type extends TypeKind("type")
+
+  def forName(name:String):TypeKind = name match {
+    case "trait" => Trait
+    case "class" => Class
+    case "type" => Type
+  }
 }
 
 sealed abstract class ValueKind
@@ -126,7 +132,7 @@ object ValueKind {
   case object Object extends ValueKind
   case object Def extends ValueKind
 
-  def fromName(name:String):ValueKind = {
+  def forName(name:String):ValueKind = {
     name match {
       case "val" => Val
       case "var" => Var
@@ -144,17 +150,22 @@ object Scope {
   case class Public() extends Scope
 }
 
-class TypeParams
+case class TypeParams(override val toString:String)
 class MethodParams
 
 trait ValueContainer {
 }
 
-sealed abstract class Item(val id:Id)
+sealed abstract class Item(val id:Id) {
+  def signature:String = id match { case cid:Id.Child => cid.localName; case _:Id.Root => ""}
+}
 
 sealed class Value(id:Id.Value/*, tpe:TypeInstance*/) extends Item(id)
 
-case class Type(override val id:Id.Type) extends Item(id)
+case class Type(override val id:Id.Type, kind:TypeKind, params:TypeParams) extends Item(id) {
+  override def signature:String =
+    kind.signature + " " + (id match { case c:Id.Child => c.localName }) + params.toString
+}
 
 case class Object(override val id:Id.Value) extends Value(id) with ValueContainer
 case class DefinedMethod(override val id:Id.Value) extends Value(id)
@@ -220,7 +231,7 @@ object HtmlParser {
   import java.io.File
   import java.nio.charset.{Charset, StandardCharsets}
   import org.jsoup.Jsoup
-  import org.jsoup.nodes.Document
+  import org.jsoup.nodes.{Document, Element}
 
   import JsoupExt._
 
@@ -234,10 +245,12 @@ object HtmlParser {
     // TODO: Known subclasses
     val name:String = doc / "#definition > h1" text()
     val ns:String = extractNS(doc)
+    val fullName = s"${ns}.${name}"
     val kind:String = doc / "#signature > .modifier_kind > .kind" first() text()
     val entity =
       kind match {
-        case "trait" | "class" => new Type(Id.Type(s"${ns}.${name}"))
+        case "trait" | "class" =>
+          extractType(Id.Type(fullName), TypeKind.forName(kind), doc)
         case "object" => Object(Id.Value(s"${ns}.${name}$$"))
         case unk => errorUnknown("TypeKind", unk)
       }
@@ -248,10 +261,19 @@ object HtmlParser {
     doc / "#definition #owner a.extype" last() attr("name")
   }
 
+  def extractType(id:Id.Type, kind:TypeKind, doc:Document):Type = {
+    val typeParams = extractTypeParams(doc / "#signature > .symbol > .tparams" first())
+    new Type(id, kind, typeParams)
+  }
+
+  def extractTypeParams(elm:Element):TypeParams = {
+    TypeParams(elm.text())
+  }
+
   def extractValueMembers(parentId:Id, doc:Document):Seq[Item] = {
     (doc / "#values > ol > li").map {elm =>
       val id = Id.Value(elm.attr("name"))
-      val kind = ValueKind.fromName(
+      val kind = ValueKind.forName(
         elm / ".signature > .modifier_kind > .kind" first() text())
       kind match {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
@@ -333,6 +355,7 @@ class PlainTextFormatter {
     def ln():Unit = appendln("")
 
     appendln(item.id.fullName)
+    appendln(item.signature)
 
     repo.childrenOf(item).foreach {child =>
       assert(item.id.isParentOf(child.id))
