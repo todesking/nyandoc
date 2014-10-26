@@ -166,6 +166,8 @@ object Markup {
   case class LinkExternal(title:String, url:String) extends Markup
   case class Code(content:String) extends Markup
   case class CodeInline(content:String) extends Markup
+  case class Bold(contents:Seq[Markup]) extends Markup
+  case class Italic(contents:Seq[Markup]) extends Markup
 }
 
 sealed abstract class Item(val id:Id, val comment:Seq[Markup]) {

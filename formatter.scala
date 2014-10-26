@@ -24,6 +24,12 @@ object Markdown {
       "* " + cleanup(dt) + "\n" + "    * " + cleanup(dd) + "\n"
     }).mkString("") + "\n"
 
+  def bold(content:String) =
+    s" *${content}* "
+
+  def italic(content:String) =
+    s" _${content}_ "
+
   private def cleanup(str:String):String =
     """^\n+|\n+$""".r.replaceAllIn(str, "")
 }
@@ -75,6 +81,10 @@ class MarkdownFormatter {
         link(title, id.fullName)
       case Markup.LinkExternal(title, url) =>
         link(title, url)
+      case Markup.Bold(contents) =>
+        bold(contents.map(formatMarkup(_)).mkString(""))
+      case Markup.Italic(contents) =>
+        italic(contents.map(formatMarkup(_)).mkString(""))
     }
   }
 }

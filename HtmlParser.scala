@@ -130,6 +130,10 @@ object HtmlParser {
         Seq(Code(e.text()))
       case Tag("code", e) =>
         Seq(CodeInline(e.text()))
+      case Tag("b", e) =>
+        Seq(Bold(extractMarkup(e)))
+      case Tag("i", e) =>
+        Seq(Italic(extractMarkup(e)))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.tagName)
         Seq(Text(e.cleanText()))
