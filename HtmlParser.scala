@@ -89,7 +89,20 @@ object HtmlParser {
     }
   }
 
-  def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] = {
+  def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] =
+    optimizeMarkups(extractMarkup0(elm))
+
+  def optimizeMarkups(markups:Seq[Markup]):Seq[Markup] =
+    if(markups.size < 2) markups
+    else {
+      val tail = optimizeMarkups(markups.tail)
+      (markups.head, tail.head) match {
+        case (Markup.Text(c1), Markup.Text(c2)) => Markup.Text(c1 + c2) +: tail.tail
+        case _ => markups
+      }
+    }
+
+  def extractMarkup0(elm:org.jsoup.nodes.Node):Seq[Markup] = {
     import Markup._
     import org.jsoup.{nodes => n}
     elm.childNodes.asScala.collect {
@@ -114,6 +127,7 @@ object HtmlParser {
         Seq(Text(e.text()))
     }.flatten
   }
+
   def extractDlMarkup(dl:org.jsoup.nodes.Node):Markup = {
     import org.jsoup.{nodes => n}
 
