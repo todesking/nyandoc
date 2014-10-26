@@ -120,12 +120,15 @@ sealed class TypeKind(val signature:String)
 object TypeKind {
   case object Trait extends TypeKind("trait")
   case object Class extends TypeKind("class")
+  case object CaseClass extends TypeKind("case class")
   case object Type extends TypeKind("type")
 
   def forName(name:String):TypeKind = name match {
     case "trait" => Trait
     case "class" => Class
+    case "case class" => Class
     case "type" => Type
+    case unk => errorUnknown("TypeKind", unk)
   }
 }
 
@@ -135,13 +138,15 @@ object ValueKind {
   case object Var extends ValueKind
   case object Object extends ValueKind
   case object Def extends ValueKind
+  case object Package extends ValueKind
 
   def forName(name:String):ValueKind = {
     name match {
-      case "val" => Val
+      case "val" | "lazy val" => Val
       case "var" => Var
       case "object" => Object
       case "def" => Def
+      case "package" => Package
       case unk => errorUnknown("ValueKind", unk)
     }
   }
@@ -236,6 +241,7 @@ object JsoupExt {
   implicit class ElementsExt[A <: Elements](self:A) {
     def /(query:String) = self.select(query)
     def firstOpt():Option[Element] = Option(self.first())
+    def lastOpt():Option[Element] = Option(self.last())
   }
 
   implicit def Elements2Collection(self:Elements) = self.asScala
@@ -267,26 +273,29 @@ object HtmlParser {
     // TODO: Linear supertypes
     // TODO: Known subclasses
     val name:String = doc / "#definition > h1" text()
+    if(name == "")
+      return Seq()
     val ns:String = extractNS(doc)
     val fullName = s"${ns}.${name}"
-    val kind:String = doc / "#signature > .modifier_kind > .kind" first() text()
-    val comment = extractMarkup(doc / "#comment" first())
+    val kind:String = doc / "#signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind_not_found"
+    val comment = doc / "#comment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
     val entity =
       kind match {
-        case "trait" | "class" =>
+        case "trait" | "class" | "case class" | "type" =>
           extractType(Id.Type(fullName), TypeKind.forName(kind), comment, doc)
-        case "object" => Object(Id.Value(s"${ns}.${name}$$"), comment)
-        case unk => errorUnknown("TypeKind", unk)
+        case "object" | "package" =>
+          Object(Id.Value(s"${ns}.${name}$$"), comment)
+        case unk => errorUnknown("Item kind", unk)
       }
     entity +: extractValueMembers(entity.id, doc)
   }
 
   def extractNS(doc:Document):String = {
-    doc / "#definition #owner a.extype" last() attr("name")
+    doc / "#definition #owner a.extype" lastOpt() map(_.attr("name")) getOrElse ""
   }
 
   def extractType(id:Id.Type, kind:TypeKind, comment:Seq[Markup], doc:Document):Type = {
-    val typeParams = extractTypeParams(doc / "#signature > .symbol > .tparams" first())
+    val typeParams = doc / "#signature > .symbol > .tparams" firstOpt() map(extractTypeParams(_)) getOrElse TypeParams("")
     new Type(id, kind, typeParams, comment)
   }
 
@@ -298,7 +307,7 @@ object HtmlParser {
     (doc / "#values > ol > li").map {elm =>
       val id = Id.Value(elm.attr("name"))
       val kind = ValueKind.forName(
-        elm / ".signature > .modifier_kind > .kind" first() text())
+        elm / ".signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind not found")
       val comment =
         elm / ".fullcomment" firstOpt() map(extractMarkup(_)) match {
           case Some(a) => a
@@ -314,7 +323,7 @@ object HtmlParser {
             ViaImplicitMethod(id.changeParent(parentId), params, resultType, id, comment)
           else
             ViaInheritMethod(id.changeParent(parentId), params, resultType, id, comment)
-        case ValueKind.Object => Object(id, comment)
+        case ValueKind.Object | ValueKind.Package => Object(id, comment)
       }
     }
   }
@@ -369,8 +378,11 @@ object Main {
   def parse(file:File):Seq[Item] = {
     if(file.isDirectory) {
       file.listFiles.flatMap(parse(_))
-    } else {
+    } else if(file.getName.endsWith(".html")){
+      println(s"Processing: ${file}")
       parse0(file)
+    } else {
+      Seq()
     }
   }
 
