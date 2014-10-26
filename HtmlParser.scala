@@ -113,15 +113,15 @@ object HtmlParser {
         Seq(extractDlMarkup(e))
       case Tag("a", e) =>
         // TODO: support LinkInternal
-        Seq(LinkExternal(e.asInstanceOf[Element].text(), e.attr("href")))
+        Seq(LinkExternal(e.text(), e.attr("href")))
       case Tag("span", e) =>
-        Seq(Text(e.asInstanceOf[Element].text()))
+        Seq(Text(e.text()))
       case Tag("br", e) =>
         Seq()
       case Tag("div", e) =>
         extractMarkup(e)
       case Tag("pre", e) =>
-        Seq(Code(e.asInstanceOf[Element] text()))
+        Seq(Code(e.text()))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.tagName)
         Seq(Text(e.text()))
