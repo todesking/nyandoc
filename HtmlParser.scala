@@ -119,7 +119,10 @@ object HtmlParser {
       case Tag("br", e) =>
         Seq(Text("\n"))
       case Tag("div", e) =>
-        extractMarkup(e)
+        if(e.hasClass("toggleContainer"))
+          Seq()
+        else
+          extractMarkup(e)
       case Tag("pre", e) =>
         Seq(Code(e.text()))
       case e:Element => // Treat as text if unknown element
