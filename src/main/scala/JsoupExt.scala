@@ -3,14 +3,24 @@ package com.todesking.dox
 object JsoupExt {
   import org.jsoup.select.Elements
   import org.jsoup.nodes.{Element, Node}
+  import org.jsoup.nodes
   import scala.collection.JavaConverters._
 
   import scala.language.implicitConversions
 
+  object TextCleaner {
+    def clean(s:String):String =
+      """^[\s\n]+|[\s\n]+$| [\s\n]+""".r.replaceAllIn(s, "")
+  }
+
   implicit class ElementExt[A <: Element](self:A) {
     def /(query:String) = self.select(query)
     def cleanText():String =
-      """[\s\n]+""".r.replaceAllIn(self.text(), " ")
+      TextCleaner.clean(self.text())
+  }
+  implicit class TextNodeExt[A <: nodes.TextNode](self:A) {
+    def cleanText():String =
+      TextCleaner.clean(self.text())
   }
 
   implicit class ElementsExt[A <: Elements](self:A) {

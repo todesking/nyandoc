@@ -97,8 +97,9 @@ object HtmlParser {
     else {
       val tail = optimizeMarkups(markups.tail)
       (markups.head, tail.head) match {
-        case (Markup.Text(c1), Markup.Text(c2)) => Markup.Text(c1 + c2) +: tail.tail
-        case _ => markups
+        case (Markup.Text(c1), Markup.Text(c2)) =>
+          Markup.Text(c1 + " " + c2) +: tail.tail
+        case _ => markups.head +: tail
       }
     }
 
@@ -106,7 +107,7 @@ object HtmlParser {
     import Markup._
     import org.jsoup.{nodes => n}
     elm.childNodes.asScala.collect {
-      case c:n.TextNode => Seq(Text(c.text()))
+      case c:n.TextNode => Seq(Text(c.cleanText()))
       case Tag("p", e) =>
         Seq(Paragraph(extractMarkup(e)))
       case Tag("dl", e) =>
@@ -115,7 +116,7 @@ object HtmlParser {
         // TODO: support LinkInternal
         Seq(LinkExternal(e.text(), e.attr("href")))
       case Tag("span", e) =>
-        Seq(Text(e.cleanText()))
+        extractMarkup(e)
       case Tag("br", e) =>
         Seq(Text("\n"))
       case Tag("div", e) =>
@@ -127,7 +128,7 @@ object HtmlParser {
         Seq(Code(e.text()))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.tagName)
-        Seq(Text(e.text()))
+        Seq(Text(e.cleanText()))
     }.flatten
   }
 
