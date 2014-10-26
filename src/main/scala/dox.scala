@@ -247,9 +247,18 @@ object JsoupExt {
   implicit def Elements2Collection(self:Elements) = self.asScala
 
   object Tag {
+    val lowerCache = scala.collection.mutable.HashMap.empty[String, String]
+
+    def toLowerCase(s:String) = synchronized {
+      lowerCache.get(s) getOrElse {
+        val lowercase = s.toLowerCase
+        lowerCache += (s -> lowercase)
+        lowercase
+      }
+    }
     def unapply(n:org.jsoup.nodes.Node): Option[String] = {
       n match {
-        case e:Element => Some(e.tagName.toLowerCase)
+        case e:Element => Some(toLowerCase(e.tagName))
         case _ => None
       }
     }
@@ -265,7 +274,21 @@ object HtmlParser {
   import JsoupExt._
 
   def parse(file:File, charset:Charset = StandardCharsets.UTF_8):Seq[Item] = {
-    parse(Jsoup.parse(file, charset.name))
+    import java.io._
+    val sb = new StringBuilder
+    val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset))
+    try {
+      var line = reader.readLine()
+      while(line != null) {
+        sb.append(line)
+        line = reader.readLine()
+      }
+    } finally {
+      reader.close()
+    }
+    val html = sb.toString
+    val baseUri = ""
+    parse(Jsoup.parse(html, baseUri))
   }
 
   def parse(doc:Document):Seq[Item] = {
@@ -307,11 +330,11 @@ object HtmlParser {
     (doc / "#values > ol > li").map {elm =>
       val id = Id.Value(elm.attr("name"))
       val kind = ValueKind.forName(
-        elm / ".signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind not found")
+        elm / "> .signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind not found")
       val comment =
-        elm / ".fullcomment" firstOpt() map(extractMarkup(_)) match {
+        elm / "> .fullcomment" firstOpt() map(extractMarkup(_)) match {
           case Some(a) => a
-          case None => elm / ".fullcomment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
+          case None => elm / ".shortcomment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
         }
       kind match {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
@@ -333,15 +356,15 @@ object HtmlParser {
     import org.jsoup.{nodes => n}
     elm.childNodes.asScala.collect {
       case c:n.TextNode => Seq(Text(c.text()))
-      case c:n.Element if(c.tagName.toLowerCase == "p") =>
+      case c@Tag("p") =>
         Seq(Paragraph(extractMarkup(c)))
-      case c:n.Element if(c.tagName.toLowerCase == "dl") =>
+      case c@Tag("dl") =>
         Seq(extractDlMarkup(c))
       case e:Element => // Treat as text if unknown element
         Seq(Text(e.text()))
     }.flatten
   }
-  def extractDlMarkup(dl:Element):Markup = {
+  def extractDlMarkup(dl:org.jsoup.nodes.Node):Markup = {
     var dtPrev:org.jsoup.nodes.Node = null
     val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
     dl.childNodes.asScala.foreach {
