@@ -79,7 +79,7 @@ object HtmlParser {
           val params = MethodParams(elm / ".signature > .symbol > .params" text())
           val resultType = ResultType(elm / ".signature > .symbol > .result" text() replaceAll("^: ", ""))
 
-          def signature = elm / ".signature" text()
+          def signature = elm / ".signature" last() text()
           if(parentId.isParentOf(id))
             DefinedMethod(id, params, resultType, signature, comment)
           else if((elm / ".signature > .symbol > .implicit").nonEmpty)
