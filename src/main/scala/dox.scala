@@ -156,9 +156,6 @@ case class TypeParams(signature:String)
 case class MethodParams(signature:String)
 case class ResultType(signature:String)
 
-trait ValueContainer {
-}
-
 sealed abstract class Item(val id:Id) {
   def signature:String = id.localName
 }
@@ -170,7 +167,7 @@ case class Type(override val id:Id.Type, kind:TypeKind, params:TypeParams) exten
     kind.signature + " " + id.localName + params.signature
 }
 
-case class Object(override val id:Id.Value) extends Value(id) with ValueContainer
+case class Object(override val id:Id.Value) extends Value(id)
 abstract class Method(id:Id.Value, params:MethodParams, resultType:ResultType) extends Value(id) {
   override def signature = s"def ${id.localName}${params.signature}: ${resultType.signature}"
 }
