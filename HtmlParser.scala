@@ -86,7 +86,8 @@ object HtmlParser {
             ViaImplicitMethod(id.changeParent(parentId), params, resultType, signature, id, comment)
           else
             ViaInheritMethod(id.changeParent(parentId), params, resultType, signature, id, comment)
-        case ValueKind.Object | ValueKind.Package => Object(id, comment)
+        case ValueKind.Object => Object(id, comment)
+        case ValueKind.Package => Package(id, comment)
       }
     }
   }
