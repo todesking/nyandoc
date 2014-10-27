@@ -19,6 +19,7 @@ object HtmlParser {
       var line = reader.readLine()
       while(line != null) {
         sb.append(line)
+        sb.append('\n')
         line = reader.readLine()
       }
     } finally {
