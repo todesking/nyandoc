@@ -12,6 +12,9 @@ object Markdown {
 
   def h(level:Int)(str:String):String = ("#" * level) + " " + str + "\n\n"
 
+  def h2bar(str:String):String =
+    s" ${str}\n${"-" * (str.length + 2)}\n\n"
+
   def paragraph(str:String):String =
     cleanup(str) + "\n\n"
 
@@ -49,9 +52,8 @@ class MarkdownFormatter {
     item.comment.map(formatMarkup(_)).foreach(sb.append(_))
 
     repo.childrenOf(item).sortBy(_.id.fullName).foreach {child =>
-      assert(item.id.isParentOf(child.id))
-
-      sb.append(h(2)(inlineCode(child.signature)))
+      sb.append('\n')
+      sb.append(h2bar(inlineCode(child.signature)))
       child.comment.map(formatMarkup(_)).foreach(sb.append(_))
 
       child match {
