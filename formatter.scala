@@ -24,6 +24,11 @@ object Markdown {
       "* " + cleanup(dt) + "\n" + "    * " + cleanup(dd) + "\n"
     }).mkString("") + "\n"
 
+  def unorderedList(items:Seq[String]):String =
+    items.map {item =>
+      s"* ${item}\n"
+    }.mkString
+
   def bold(content:String) =
     s" *${content}* "
 
@@ -85,6 +90,8 @@ class MarkdownFormatter {
         bold(contents.map(formatMarkup(_)).mkString(""))
       case Markup.Italic(contents) =>
         italic(contents.map(formatMarkup(_)).mkString(""))
+      case Markup.UnorderedList(items) =>
+        unorderedList(items.map{li => formatMarkup(li.contents)})
     }
   }
 }

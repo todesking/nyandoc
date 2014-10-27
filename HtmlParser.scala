@@ -143,6 +143,8 @@ object HtmlParser {
         } getOrElse {
           Seq(Code(e / "> li.cmt > pre" text()))
         }
+      case Tag("ul", e) =>
+        Seq(UnorderedList(e / "> li" map {li =>ListItem(extractMarkup(li))}))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.toString)
         Seq(Text(e.cleanText()))
