@@ -152,7 +152,6 @@ object Scope {
   case class Public() extends Scope
 }
 
-case class TypeParams(signature:String)
 case class MethodParams(signature:String)
 case class ResultType(signature:String)
 
@@ -181,12 +180,9 @@ sealed class Value(id:Id.Value, comment:Seq[Markup]) extends Item(id, comment)
 case class Type(
   override val id:Id.Type,
   kind:TypeKind,
-  params:TypeParams,
+  override val signature:String,
   override val comment:Seq[Markup]
-) extends Item(id, comment) {
-  override def signature:String =
-    kind.signature + " " + id.localName + params.signature
-}
+) extends Item(id, comment)
 
 case class Object(
   override val id:Id.Value,

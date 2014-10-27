@@ -31,7 +31,6 @@ object HtmlParser {
   }
 
   def parse(doc:Document):Seq[Item] = {
-    // TODO: Type params
     // TODO: Linear supertypes
     // TODO: Known subclasses
     val fullName = doc / """#definition .permalink a[title=Permalink]""" firstOpt() map(_.attr("href").replaceAll(""".*index\.html#""", "")) getOrElse ""
@@ -39,12 +38,13 @@ object HtmlParser {
       println("  => Skipped")
       return Seq()
     }
-    val kind:String = doc / "#signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind_not_found"
+    val kind:String = doc / "#signature > .modifier_kind > .kind" first() cleanText()
+    val signature = doc / "#signature" first() cleanText()
     val comment = doc / "#comment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
     val entity =
       kind match {
         case "trait" | "class" | "case class" | "type" =>
-          extractType(Id.Type(fullName), TypeKind.forName(kind), comment, doc)
+          Type(Id.Type(fullName), TypeKind.forName(kind), signature, comment)
         case "object" =>
           Object(Id.Value(fullName), comment)
         case "package" =>
@@ -53,15 +53,6 @@ object HtmlParser {
       }
     println(s"  => $fullName")
     entity +: extractValueMembers(entity.id, doc)
-  }
-
-  def extractType(id:Id.Type, kind:TypeKind, comment:Seq[Markup], doc:Document):Type = {
-    val typeParams = doc / "#signature > .symbol > .tparams" firstOpt() map(extractTypeParams(_)) getOrElse TypeParams("")
-    new Type(id, kind, typeParams, comment)
-  }
-
-  def extractTypeParams(elm:Element):TypeParams = {
-    TypeParams(elm.text())
   }
 
   def extractValueMembers(parentId:Id, doc:Document):Seq[Item] = {
