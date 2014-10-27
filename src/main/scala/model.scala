@@ -205,16 +205,19 @@ trait Repository {
 
 object Repository {
   def apply(items:Seq[Item]):Repository = {
-    val id2item:Map[Id, Item] =
-      items.map{item => item.id -> item}.toMap
+    import scala.collection.mutable.{HashMap, Set, MultiMap}
+    val id2item = new HashMap[Id, Set[Item]] with MultiMap[Id, Item]
+    for(item <- items) {
+      id2item.addBinding(item.id, item)
+    }
     new Repository {
       override def parentOf(item:Item):Option[Item] =
         item.id match {
           case Id.Root => None
-          case child:Id.Child => id2item.get(child.parentId)
+          case child:Id.Child => id2item.get(child.parentId).map(_.head)
         }
       override def childrenOf(item:Item):Seq[Item] =
-        id2item.filter {case (id, _) => item.id.isParentOf(id) }.map{case (_, item) => item}.toSeq
+        id2item.filter {case (id, _) => item.id.isParentOf(id) }.flatMap(_._2).toSeq
     }
   }
 }
