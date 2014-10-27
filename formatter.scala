@@ -48,7 +48,7 @@ class MarkdownFormatter {
     sb.append(code(item.signature))
     item.comment.map(formatMarkup(_)).foreach(sb.append(_))
 
-    repo.childrenOf(item).foreach {child =>
+    repo.childrenOf(item).sortBy(_.id.fullName).foreach {child =>
       assert(item.id.isParentOf(child.id))
 
       sb.append(h(2)(inlineCode(child.signature)))
