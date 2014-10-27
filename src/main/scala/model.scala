@@ -178,17 +178,54 @@ sealed abstract class Item(val id:Id, val comment:Seq[Markup]) {
 
 sealed class Value(id:Id.Value, comment:Seq[Markup]) extends Item(id, comment)
 
-case class Type(override val id:Id.Type, kind:TypeKind, params:TypeParams, override val comment:Seq[Markup]) extends Item(id, comment) {
+case class Type(
+  override val id:Id.Type,
+  kind:TypeKind,
+  params:TypeParams,
+  override val comment:Seq[Markup]
+) extends Item(id, comment) {
   override def signature:String =
     kind.signature + " " + id.localName + params.signature
 }
 
-case class Object(override val id:Id.Value, override val comment:Seq[Markup]) extends Value(id, comment)
-abstract class Method(id:Id.Value, params:MethodParams, resultType:ResultType, override val signature:String, comment:Seq[Markup]) extends Value(id, comment) {
-}
-case class DefinedMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, override val signature:String, override val comment:Seq[Markup]) extends Method(id, params, resultType, signature, comment)
-case class ViaImplicitMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, override val signature:String, originalId:Id.Value, override val comment:Seq[Markup]) extends Method(id, params, resultType, signature, comment)
-case class ViaInheritMethod(override val id:Id.Value, params:MethodParams, resultType:ResultType, override val signature:String, originalId:Id.Value, override val comment:Seq[Markup]) extends Method(id, params, resultType, signature, comment)
+case class Object(
+  override val id:Id.Value,
+  override val comment:Seq[Markup]
+) extends Value(id, comment)
+
+abstract class Method(
+  id:Id.Value,
+  params:MethodParams,
+  resultType:ResultType,
+  override val signature:String,
+  comment:Seq[Markup]
+) extends Value(id, comment)
+
+case class DefinedMethod(
+  override val id:Id.Value,
+  params:MethodParams,
+  resultType:ResultType,
+  override val signature:String,
+  override val comment:Seq[Markup]
+) extends Method(id, params, resultType, signature, comment)
+
+case class ViaImplicitMethod(
+  override val id:Id.Value,
+  params:MethodParams,
+  resultType:ResultType,
+  override val signature:String,
+  originalId:Id.Value,
+  override val comment:Seq[Markup]
+) extends Method(id, params, resultType, signature, comment)
+
+case class ViaInheritMethod(
+  override val id:Id.Value,
+  params:MethodParams,
+  resultType:ResultType,
+  override val signature:String,
+  originalId:Id.Value,
+  override val comment:Seq[Markup]
+) extends Method(id, params, resultType, signature, comment)
 
 case class Package(override val id:Id.Value, override val comment:Seq[Markup]) extends Value(id, comment)
 
