@@ -34,11 +34,11 @@ object HtmlParser {
     // TODO: Type params
     // TODO: Linear supertypes
     // TODO: Known subclasses
-    val name:String = doc / "#definition > h1" text()
-    if(name == "")
+    val fullName = doc / """#definition .permalink a[title=Permalink]""" firstOpt() map(_.attr("href").replaceAll(""".*index\.html#""", "")) getOrElse ""
+    if(fullName isEmpty()) {
+      println("  => Skipped")
       return Seq()
-    val ns:String = extractNS(doc)
-    val fullName = s"${ns}.${name}"
+    }
     val kind:String = doc / "#signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind_not_found"
     val comment = doc / "#comment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
     val entity =
@@ -46,16 +46,13 @@ object HtmlParser {
         case "trait" | "class" | "case class" | "type" =>
           extractType(Id.Type(fullName), TypeKind.forName(kind), comment, doc)
         case "object" =>
-          Object(Id.Value(s"${ns}.${name}$$"), comment)
+          Object(Id.Value(fullName), comment)
         case "package" =>
-          Package(Id.Value(s"${ns}.${name}$$"), comment)
+          Package(Id.Value(fullName), comment)
         case unk => errorUnknown("Item kind", unk)
       }
+    println(s"  => $fullName")
     entity +: extractValueMembers(entity.id, doc)
-  }
-
-  def extractNS(doc:Document):String = {
-    doc / "#definition #owner a.extype" lastOpt() map(_.attr("name")) getOrElse ""
   }
 
   def extractType(id:Id.Type, kind:TypeKind, comment:Seq[Markup], doc:Document):Type = {
