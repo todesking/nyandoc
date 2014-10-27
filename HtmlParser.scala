@@ -93,12 +93,12 @@ object HtmlParser {
   }
 
   def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] =
-    optimizeMarkups(extractMarkup0(elm))
+    normalizeMarkups(extractMarkup0(elm))
 
-  def optimizeMarkups(markups:Seq[Markup]):Seq[Markup] =
+  def normalizeMarkups(markups:Seq[Markup]):Seq[Markup] =
     if(markups.size < 2) markups
     else {
-      val tail = optimizeMarkups(markups.tail)
+      val tail = normalizeMarkups(markups.tail)
       (markups.head, tail.head) match {
         case (Markup.Text(c1), Markup.Text(c2)) =>
           Markup.Text(c1 + " " + c2) +: tail.tail
@@ -119,14 +119,14 @@ object HtmlParser {
         // TODO: support LinkInternal
         Seq(LinkExternal(e.text(), e.attr("href")))
       case Tag("span", e) =>
-        extractMarkup(e)
+        extractMarkup0(e)
       case Tag("br", e) =>
         Seq(Text("\n"))
       case Tag("div", e) =>
         if(e.hasClass("toggleContainer"))
           Seq()
         else
-          extractMarkup(e)
+          extractMarkup0(e)
       case Tag("pre", e) =>
         Seq(Code(e.text()))
       case Tag("code", e) =>
@@ -165,7 +165,7 @@ object HtmlParser {
         // junk
       case Tag("div", div) if(div.hasClass("block")) =>
         // code example
-        others ++= extractMarkup(div)
+        others ++= extractMarkup0(div)
       case t:n.TextNode =>
       case other =>
         unsupportedFeature("markup(dl)", other.toString)
