@@ -45,8 +45,10 @@ object HtmlParser {
       kind match {
         case "trait" | "class" | "case class" | "type" =>
           extractType(Id.Type(fullName), TypeKind.forName(kind), comment, doc)
-        case "object" | "package" =>
+        case "object" =>
           Object(Id.Value(s"${ns}.${name}$$"), comment)
+        case "package" =>
+          Package(Id.Value(s"${ns}.${name}$$"), comment)
         case unk => errorUnknown("Item kind", unk)
       }
     entity +: extractValueMembers(entity.id, doc)
