@@ -18,6 +18,7 @@ object Main {
       val items = parse(src)
       val repo = Repository(items)
 
+      println(s"generaging documents into ${dest}")
       generate(items, repo, dest)
     }
   }
