@@ -253,6 +253,15 @@ object Repository {
           id2item.put(sub.id, sub)
       }
     }
+    val id2children = new HashMap[Id, Set[Id]] with MultiMap[Id, Id]
+    def registerId(id:Id):Unit = id match {
+      case _:Id.Root =>
+        // do nothing
+      case cid:Id.Child =>
+        id2children.addBinding(cid.parentId, id)
+        registerId(cid.parentId)
+    }
+    id2item.keys.foreach {id => registerId(id)}
     new Repository {
       override def topLevelItems():Seq[Item] = {
         id2item.values.filter(isTopLevel(_)).toSeq
@@ -263,7 +272,9 @@ object Repository {
           case child:Id.Child => id2item.get(child.parentId)
         }
       override def childrenOf(item:Item):Seq[Item] =
-        id2item.filter {case (id, _) => item.id.isParentOf(id) }.map(_._2).toSeq
+        id2children.get(item.id) map { cids =>
+          cids.flatMap {cid => id2item.get(cid)}.toSeq
+        } getOrElse Seq()
     }
   }
 }
