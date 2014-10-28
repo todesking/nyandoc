@@ -11,7 +11,7 @@ object HtmlParser {
   import JsoupExt._
   import scala.collection.JavaConverters._
 
-  def parse(file:File, charset:Charset = StandardCharsets.UTF_8):Seq[Item] = {
+  def parse(file:File, charset:Charset = StandardCharsets.UTF_8):Option[(Item, Seq[Item])] = {
     import java.io._
     val sb = new StringBuilder
     val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset))
@@ -30,13 +30,13 @@ object HtmlParser {
     parse(Jsoup.parse(html, baseUri))
   }
 
-  def parse(doc:Document):Seq[Item] = {
+  def parse(doc:Document):Option[(Item, Seq[Item])] = {
     // TODO: Linear supertypes
     // TODO: Known subclasses
     val fullName = doc / """#definition .permalink a[title=Permalink]""" firstOpt() map(_.attr("href").replaceAll(""".*index\.html#""", "")) getOrElse ""
     if(fullName isEmpty()) {
       println("  => Skipped")
-      return Seq()
+      return None
     }
     val kind:String = doc / "#signature > .modifier_kind > .kind" first() cleanText()
     val signature = doc / "#signature" first() cleanText()
@@ -52,7 +52,7 @@ object HtmlParser {
         case unk => errorUnknown("Item kind", unk)
       }
     println(s"  => $fullName")
-    entity +: extractValueMembers(entity.id, doc)
+    Some(entity, extractValueMembers(entity.id, doc))
   }
 
   def extractValueMembers(parentId:Id, doc:Document):Seq[Item] = {

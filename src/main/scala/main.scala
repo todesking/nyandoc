@@ -23,18 +23,18 @@ object Main {
     }
   }
 
-  def parse(file:File):Seq[Item] = {
+  def parse(file:File):Seq[(Item, Seq[Item])] = {
     if(file.isDirectory) {
       file.listFiles.flatMap(parse(_))
     } else if(file.getName.endsWith(".html")){
       println(s"Processing: ${file}")
-      parse0(file)
+      parse0(file).toSeq
     } else {
       Seq()
     }
   }
 
-  def parse0(file:File):Seq[Item] = {
+  def parse0(file:File):Option[(Item, Seq[Item])] = {
     HtmlParser.parse(file)
   }
 

@@ -240,23 +240,29 @@ trait Repository {
 }
 
 object Repository {
-  def apply(items:Seq[Item]):Repository = {
+  def apply(items:Seq[(Item, Seq[Item])]):Repository = {
     import scala.collection.mutable.{HashMap, Set, MultiMap}
-    val id2item = new HashMap[Id, Set[Item]] with MultiMap[Id, Item]
-    for(item <- items) {
-      id2item.addBinding(item.id, item)
+    val id2item = new HashMap[Id, Item]
+    for {
+      (item, subItems) <- items
+    } {
+      id2item.put(item.id, item)
+      subItems.foreach {sub =>
+        if(!id2item.contains(sub.id))
+          id2item.put(sub.id, sub)
+      }
     }
     new Repository {
       override def topLevelItems():Seq[Item] = {
-        items.filter(isTopLevel(_))
+        id2item.values.filter(isTopLevel(_)).toSeq
       }
       override def parentOf(item:Item):Option[Item] =
         item.id match {
           case Id.Root => None
-          case child:Id.Child => id2item.get(child.parentId).map(_.head)
+          case child:Id.Child => id2item.get(child.parentId)
         }
       override def childrenOf(item:Item):Seq[Item] =
-        id2item.filter {case (id, _) => item.id.isParentOf(id) }.flatMap(_._2).toSeq
+        id2item.filter {case (id, _) => item.id.isParentOf(id) }.map(_._2).toSeq
     }
   }
 }
