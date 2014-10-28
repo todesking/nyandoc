@@ -46,7 +46,7 @@ object HtmlParser {
         case "trait" | "class" | "case class" | "type" =>
           Type(Id.Type(fullName), TypeKind.forName(kind), signature, comment)
         case "object" =>
-          Object(Id.Value(fullName), comment)
+          Object(Id.Value(fullName), signature, comment)
         case "package" =>
           Package(Id.Value(fullName), comment)
         case unk => errorUnknown("Item kind", unk)
@@ -65,6 +65,7 @@ object HtmlParser {
           case Some(a) => a
           case None => elm / ".shortcomment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
         }
+      def signature = elm / ".signature" last() text()
       kind match {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
           val params = MethodParams(elm / ".signature > .symbol > .params" text())
@@ -77,7 +78,9 @@ object HtmlParser {
             ViaImplicitMethod(id.changeParent(parentId), params, resultType, signature, id, comment)
           else
             ViaInheritMethod(id.changeParent(parentId), params, resultType, signature, id, comment)
-        case ValueKind.Object => Object(id, comment)
+        case ValueKind.Object =>
+          val newId = Id.Value(id.fullName + "$") // :(
+          Object(newId, signature, comment)
         case ValueKind.Package => Package(id, comment)
       }
     }

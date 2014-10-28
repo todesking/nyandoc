@@ -185,6 +185,7 @@ case class Type(
 
 case class Object(
   override val id:Id.Value,
+  override val signature:String,
   override val comment:Seq[Markup]
 ) extends Value(id, comment)
 
