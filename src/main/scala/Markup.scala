@@ -16,15 +16,54 @@ object Markup {
   case class Italic(contents:Seq[Markup]) extends Markup
 
   def normalize(markups:Seq[Markup]):Seq[Markup] =
-    if(markups.size < 2) markups
-    else {
-      val tail = normalize(markups.tail)
-      (markups.head, tail.head) match {
-        case (Markup.Text(c1), Markup.Text(c2)) =>
-          Markup.Text(c1 + " " + c2) +: tail.tail
-        case _ => markups.head +: tail
+    Normalize(markups)
+
+  object Normalize {
+    def apply(markups:Seq[Markup]):Seq[Markup] =
+      doRecursive(dropEmpty _ andThen textFusion)(markups)
+
+    def doRecursive(f:Seq[Markup]=>Seq[Markup])(markups:Seq[Markup]):Seq[Markup] = {
+      def doR(ms:Seq[Markup]) = doRecursive(f)(ms)
+      f(
+        markups map {
+          case Paragraph(cs) => Paragraph(doRecursive(f)(cs))
+          case Dl(items) => Dl(items map {item => DlItem(doR(item.dt), doR(item.dd))})
+          case UnorderedList(items) => UnorderedList(items map {item => ListItem(doR(item.contents))})
+          case Bold(contents) => Bold(doR(contents))
+          case Italic(contents) => Italic(doR(contents))
+          case other => other
+        }
+      )
+    }
+
+    def dropEmpty(markups:Seq[Markup]) = {
+      val empty = Seq()
+      markups.flatMap {
+        case
+          Text("")
+          | Paragraph(Seq())
+          | Dl(Seq())
+          | UnorderedList(Seq())
+          | Code("")
+          | CodeInline("")
+          | Bold(Seq())
+          | Italic(Seq())
+          =>
+            Seq()
+        case other => Seq(other)
       }
     }
 
+    def textFusion(markups:Seq[Markup]) =
+      if(markups.size < 2) markups
+      else {
+        val tail = normalize(markups.tail)
+        (markups.head, tail.head) match {
+          case (Markup.Text(c1), Markup.Text(c2)) =>
+            Markup.Text(c1 + " " + c2) +: tail.tail
+          case _ => markups.head +: tail
+        }
+      }
+  }
 }
 
