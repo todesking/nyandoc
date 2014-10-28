@@ -14,5 +14,17 @@ object Markup {
   case class CodeInline(content:String) extends Markup
   case class Bold(contents:Seq[Markup]) extends Markup
   case class Italic(contents:Seq[Markup]) extends Markup
+
+  def normalize(markups:Seq[Markup]):Seq[Markup] =
+    if(markups.size < 2) markups
+    else {
+      val tail = normalize(markups.tail)
+      (markups.head, tail.head) match {
+        case (Markup.Text(c1), Markup.Text(c2)) =>
+          Markup.Text(c1 + " " + c2) +: tail.tail
+        case _ => markups.head +: tail
+      }
+    }
+
 }
 

@@ -90,18 +90,7 @@ object HtmlParser {
   }
 
   def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] =
-    normalizeMarkups(extractMarkup0(elm))
-
-  def normalizeMarkups(markups:Seq[Markup]):Seq[Markup] =
-    if(markups.size < 2) markups
-    else {
-      val tail = normalizeMarkups(markups.tail)
-      (markups.head, tail.head) match {
-        case (Markup.Text(c1), Markup.Text(c2)) =>
-          Markup.Text(c1 + " " + c2) +: tail.tail
-        case _ => markups.head +: tail
-      }
-    }
+    Markup.normalize(extractMarkup0(elm))
 
   def extractMarkup0(elm:org.jsoup.nodes.Node):Seq[Markup] = {
     import Markup._
