@@ -52,7 +52,10 @@ object Main {
     val content = new MarkdownFormatter().format(top, repo)
 
     import java.io._
-    val dest:File = new File(destDir, top.id.asFileName + ".md")
+    val dest:File = destFileOf(destDir, top.id)
+
+    println(s"Generating ${dest}")
+    dest.getParentFile.mkdirs()
 
     val writer = new BufferedWriter(new FileWriter(dest))
     try {
@@ -61,4 +64,7 @@ object Main {
       writer.close()
     }
   }
+
+  def destFileOf(dir:java.io.File, id:Id):java.io.File =
+    new java.io.File(dir, id.fullName.replaceAll("""\.""", java.io.File.separator) + ".md")
 }

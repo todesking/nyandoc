@@ -3,7 +3,6 @@ package com.todesking.dox
 import LibGlobal._
 
 sealed trait Id {
-  def asFileName():String = fullName
   def isParentOf(id:Id):Boolean
   def isAncestorOf(id:Id):Boolean
   def fullName():String
