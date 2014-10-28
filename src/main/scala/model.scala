@@ -233,6 +233,7 @@ trait Repository {
     }
   }
 
+  def topLevelItems():Seq[Item]
   def parentOf(item:Item):Option[Item]
   def childrenOf(item:Item):Seq[Item]
 }
@@ -245,6 +246,9 @@ object Repository {
       id2item.addBinding(item.id, item)
     }
     new Repository {
+      override def topLevelItems():Seq[Item] = {
+        items.filter(isTopLevel(_))
+      }
       override def parentOf(item:Item):Option[Item] =
         item.id match {
           case Id.Root => None

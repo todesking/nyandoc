@@ -19,7 +19,7 @@ object Main {
       val repo = Repository(items)
 
       println(s"generaging documents into ${dest}")
-      generate(items, repo, dest)
+      generate(repo, dest)
     }
   }
 
@@ -38,13 +38,12 @@ object Main {
     HtmlParser.parse(file)
   }
 
-  def generate(items:Seq[Item], repo:Repository, dest:File):Unit = {
+  def generate(repo:Repository, dest:File):Unit = {
     if(!dest.exists)
       dest.mkdirs()
 
-    items.foreach {item =>
-      if(repo.isTopLevel(item))
-        generate0(item, repo, dest)
+    repo.topLevelItems.foreach {item =>
+      generate0(item, repo, dest)
     }
   }
 
