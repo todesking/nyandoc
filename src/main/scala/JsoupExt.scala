@@ -10,7 +10,7 @@ object JsoupExt {
 
   object TextCleaner {
     def clean(s:String):String =
-      """^[\s\n]+|[\s\n]+$| [\s\n]+""".r.replaceAllIn(s, "")
+      """\s+""".r.replaceAllIn(s, " ")
   }
 
   implicit class ElementExt[A <: Element](self:A) {
