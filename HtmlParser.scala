@@ -70,18 +70,21 @@ object HtmlParser {
         case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
           val params = MethodParams(elm / ".signature > .symbol > .params" text())
           val resultType = ResultType(elm / ".signature > .symbol > .result" text() replaceAll("^: ", ""))
+          val subId = elm / "> a:eq(1)" attr("id") replaceAll("""\.""", "/")
+          val fullId = Id.ChildValue(id.parentId, subId)
 
           def signature = elm / ".signature" last() text()
-          if(parentId.isParentOf(id))
-            DefinedMethod(id, params, resultType, signature, comment)
+          if(parentId.isParentOf(fullId))
+            DefinedMethod(fullId, params, resultType, signature, comment)
           else if((elm / ".signature > .symbol > .implicit").nonEmpty)
-            ViaImplicitMethod(id.changeParent(parentId), params, resultType, signature, id, comment)
+            ViaImplicitMethod(fullId.changeParent(parentId), params, resultType, signature, fullId, comment)
           else
-            ViaInheritMethod(id.changeParent(parentId), params, resultType, signature, id, comment)
+            ViaInheritMethod(fullId.changeParent(parentId), params, resultType, signature, fullId, comment)
         case ValueKind.Object =>
           val newId = Id.Value(id.fullName + "$") // :(
           Object(newId, signature, comment)
-        case ValueKind.Package => Package(id, comment)
+        case ValueKind.Package =>
+          Package(id, comment)
       }
     }
   }

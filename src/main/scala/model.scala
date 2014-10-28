@@ -71,10 +71,20 @@ object Id {
     override def childFullName(name:String) = super[Root].childFullName(name)
   }
 
-  sealed case class ChildValue(
+  case class ChildValue(
     override val parentId:Id,
     override val localName:String
   ) extends Child with Value {
+    override def changeParent(newParent:Id) =
+      ChildValue(newParent, localName)
+  }
+
+  sealed case class ChildMethod(
+    override val parentId:Id,
+    val localBaseName:String,
+    val paramId:String
+  ) extends Child with Value {
+    override val localName = localBaseName + paramId
     override def changeParent(newParent:Id) =
       ChildValue(newParent, localName)
   }
@@ -87,19 +97,26 @@ object Id {
       ChildType(newParent, localName)
   }
 
-  def Type(fullName:CharSequence):ChildType =
+  def Type(fullName:String):ChildType =
     build(fullName)(ChildType.apply)
-  def Value(fullName:CharSequence):ChildValue =
+  def Value(fullName:String):ChildValue =
     build(fullName)(ChildValue.apply)
 
-  private def build[A <: Id](fullName:CharSequence)(builder:(Id, String) => A):A =
-    """([.#])([^.#]+)$""".r.findFirstMatchIn(fullName) match {
-      case Some(m) =>
-        if(m.group(1) == ".") builder(Value(m.before), m.group(2))
-        else builder(Type(m.before), m.group(2))
-      case None =>
-        builder(Root, fullName.toString)
+  private def build[A <: Id](fullName:String)(builder:(Id, String) => A):A = {
+    // FIXME: IT IS VERY BAD but I have no idea how to fix it
+    if(fullName.endsWith("###")) {
+      val parent = Type(fullName.substring(0, fullName.length - 3))
+      builder(parent, "##")
+    } else {
+      """([.#])([^.#]+)$""".r.findFirstMatchIn(fullName) match {
+        case Some(m) =>
+          if(m.group(1) == ".") builder(Value(m.before.toString), m.group(2))
+          else builder(Type(m.before.toString), m.group(2))
+        case None =>
+          builder(Root, fullName.toString)
+      }
     }
+  }
 }
 
 sealed class ItemKind
