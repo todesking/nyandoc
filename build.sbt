@@ -9,3 +9,5 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= Seq("-deprecation", "-feature")
+
+scalacOptions in (Compile, doc) ++= Seq("-groups", "-implicits")
