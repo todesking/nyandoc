@@ -12,7 +12,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     doMultiLine(str)(appendBreakable0)
 
   def appendUnbreakable(str:String):Unit =
-    doMultiLine(str)(appendUnbreakable0)
+    doMultiLine(str)(appendUnbreakable0(_, needSpacing = true))
 
   private[this] def doMultiLine(str:String)(f:String => Unit):Unit = {
     val lines = str.split("\n")
@@ -24,9 +24,12 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     f(lines.head)
   }
 
+  private[this] def hasCurrentLineContent():Boolean =
+    currentLine.nonEmpty && currentLine != " " * indentLevel
+
   def indent(n:Int):Unit = {
     require(indentLevel + n >= 0)
-    if(currentLine == " " * indentLevel) {
+    if(!hasCurrentLineContent) {
       indentLevel += n
       currentLine = " " * indentLevel
     } else {
@@ -35,7 +38,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   }
 
   def terminateLine():Unit = {
-    if(currentLine.nonEmpty && currentLine != " " * indentLevel) {
+    if(hasCurrentLineContent) {
       newLine()
     } else {
       if(lines.nonEmpty && lines.last.isEmpty)
@@ -51,20 +54,40 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   private[this] def appendBreakable0(str:String):Unit = {
     val words = str.split("""\s+""").filter(_.nonEmpty)
     words.foreach { word =>
-      appendUnbreakable0(word + " ")
+      appendUnbreakable0(word, needSpacing = true)
     }
   }
 
-  private[this] def appendUnbreakable0(str:String):Unit = {
-    if(currentLine == " " * indentLevel) {
+  private[this] def appendUnbreakable0(str:String, needSpacing:Boolean):Unit = {
+    if(!hasCurrentLineContent) {
       currentLine += str
-    } else if(width(currentLine) + width(str) <= optimalWidth || width(currentLine) <= indentLevel) {
+    } else if(needSpacing && needSpacingBeyond(currentLine.last, str)) {
+      val spaced = " " + str
+      if(isFitInCurrentLine(width(spaced))) {
+        currentLine += spaced
+      } else {
+        newLine()
+        currentLine += str
+      }
+    } else if(isFitInCurrentLine(width(str))) {
       currentLine += str
     } else {
       newLine()
       currentLine += str
     }
   }
+
+  private[this] def needSpacingBeyond(c:Char, s:String):Boolean = {
+    (s(0) match {
+      case ' ' | ')' | ']' | ';' | '.' | ',' => false
+      case _ => true
+    }) && (c match {
+      case ' ' | '[' | '(' => false
+      case _ => true
+    })
+  }
+  private[this] def isFitInCurrentLine(w:Int):Boolean =
+    w + width(currentLine) <= optimalWidth
 
   private[this] def width(line:String):Int = {
     line.length
