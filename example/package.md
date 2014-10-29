@@ -1,7 +1,0 @@
-# package
-
-
-```scala
-package
-```
-
