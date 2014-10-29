@@ -174,9 +174,9 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
   }
 
   def h2bar(str:String):Unit = {
-    layout.appendUnbreakable(s" ${str}")
+    layout.appendUnbreakable(s"${str}")
     layout.newLine()
-    layout.appendUnbreakable(s"${"-" * (str.length + 2)}")
+    layout.appendUnbreakable(s"${"-" * (str.length)}")
     layout.newLine()
     layout.newLine()
   }
