@@ -102,8 +102,13 @@ object HtmlParser {
       case Tag("dl", e) =>
         extractDlMarkup(e)
       case Tag("a", e) =>
-        // TODO: support LinkInternal
-        Seq(LinkExternal(e.text(), e.attr("href")))
+        val url = e.attr("href")
+        if(url.startsWith("http:") || url.startsWith("https:") || url.startsWith("//")) {
+          Seq(LinkExternal(e.text(), url))
+        } else {
+          // TODO: support LinkInternal
+          Seq(Text(e.text()))
+        }
       case Tag("span", e) =>
         extractMarkup0(e)
       case Tag("br", e) =>
