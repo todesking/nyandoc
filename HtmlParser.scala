@@ -106,8 +106,7 @@ object HtmlParser {
         if(url.startsWith("http:") || url.startsWith("https:") || url.startsWith("//")) {
           Seq(LinkExternal(e.text(), url))
         } else {
-          // TODO: support LinkInternal
-          Seq(Text(e.text()))
+          Seq(LinkInternal(e.text(), url))
         }
       case Tag("span", e) =>
         extractMarkup0(e)

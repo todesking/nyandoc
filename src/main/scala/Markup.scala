@@ -8,7 +8,7 @@ object Markup {
   case class DlItem(dt:Seq[Markup], dd:Seq[Markup])
   case class UnorderedList(items:Seq[ListItem]) extends Markup
   case class ListItem(contents:Seq[Markup])
-  case class LinkInternal(title:String, id:Id) extends Markup
+  case class LinkInternal(title:String, id:String) extends Markup // TODO: id:Id
   case class LinkExternal(title:String, url:String) extends Markup
   case class Code(content:String) extends Markup
   case class CodeInline(content:String) extends Markup
@@ -20,7 +20,7 @@ object Markup {
 
   object Normalize {
     def apply(markups:Seq[Markup]):Seq[Markup] =
-      doRecursive(dropEmpty _ andThen removeEmptyLink andThen removeInternalLink andThen textFusion)(markups)
+      doRecursive(dropEmpty _ andThen removeEmptyLink andThen textFusion)(markups)
 
     def doRecursive(f:Seq[Markup]=>Seq[Markup])(markups:Seq[Markup]):Seq[Markup] = {
       def doR(ms:Seq[Markup]) = doRecursive(f)(ms)
@@ -56,13 +56,6 @@ object Markup {
 
     def removeEmptyLink(markups:Seq[Markup]) = markups.map {
       case LinkExternal(title, "") =>
-        Text(title)
-      case x =>
-        x
-    }
-
-    def removeInternalLink(markups:Seq[Markup]) = markups.map {
-      case LinkExternal(title, url) if(url.startsWith(".")) =>
         Text(title)
       case x =>
         x

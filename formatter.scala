@@ -134,7 +134,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
       case Markup.CodeInline(content) =>
         layout.appendUnbreakable("`" + normalize(content) + "`")
       case Markup.LinkInternal(title, id) =>
-        link(title, id.fullName)
+        layout.appendText(normalize(title))
       case Markup.LinkExternal(title, url) =>
         link(title, url)
       case Markup.Bold(contents) =>
