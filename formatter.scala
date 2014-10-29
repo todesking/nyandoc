@@ -203,7 +203,12 @@ class MarkdownFormatter {
           case _ => 100
         }
       (orderByKind, child.id.fullName)
-    } .foreach {child =>
+    }.filter {
+      case item:ViaInheritMethod =>
+        Seq("scala.Any", "scala.AnyRef").contains(item.originalId match { case c:Id.Child => c.parentId.fullName; case _ => "" }).unary_!
+      case _:ViaImplicitMethod => false
+      case _ => true
+    }.foreach {child =>
       renderer.layout.newLine()
       renderer.h2bar("`" + child.signature + "`")
       renderer.render(child.comment)
