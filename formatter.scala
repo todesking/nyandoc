@@ -11,9 +11,9 @@ class Markdown(
       case Markup.Text(content) =>
         content
       case Markup.Paragraph(children) =>
-        paragraph(children.map(render(_)).mkString(""))
+        paragraph(children.map(renderInline(_)).mkString(""))
       case Markup.Dl(items) =>
-        definitionList(items.map {item => (render(item.dt), render(item.dd))})
+        definitionList(items.map {item => (renderInline(item.dt), renderInline(item.dd))})
       case Markup.Code(content) =>
         code(content)
       case Markup.CodeInline(content) =>
@@ -23,13 +23,21 @@ class Markdown(
       case Markup.LinkExternal(title, url) =>
         link(title, url)
       case Markup.Bold(contents) =>
-        bold(contents.map(render(_)).mkString(""))
+        bold(renderInline(contents))
       case Markup.Italic(contents) =>
-        italic(contents.map(render(_)).mkString(""))
+        italic(renderInline(contents))
       case Markup.UnorderedList(items) =>
-        unorderedList(items.map{li => render(li.contents)})
+        unorderedList(items.map{li => renderInline(li.contents)})
     }
   }
+
+  def renderInline(markups:Seq[Markup]):String =
+    markups.map(renderInline(_)).mkString("")
+
+  def renderInline(markup:Markup):String =
+    markup match {
+      case x => render(x)
+    }
 
   def code(str:String):String = s"""
     |```scala
