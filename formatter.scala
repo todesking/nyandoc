@@ -167,7 +167,16 @@ class MarkdownFormatter {
     renderer.render(Markup.Code(item.signature))
     renderer.render(item.comment)
 
-    repo.childrenOf(item).sortBy(_.id.fullName).foreach {child =>
+    repo.childrenOf(item).sortBy {child =>
+      val orderByKind =
+        child match {
+          case _:DefinedMethod => 0
+          case _:ViaInheritMethod => 1
+          case _:ViaImplicitMethod => 2
+          case _ => 100
+        }
+      (orderByKind, child.id.fullName)
+    } .foreach {child =>
       renderer.layout.newLine()
       renderer.h2bar("`" + child.signature + "`")
       renderer.render(child.comment)
