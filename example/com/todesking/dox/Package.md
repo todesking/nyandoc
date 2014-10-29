@@ -6,24 +6,24 @@ case class Package(id: Id.Value, comment: Seq[Markup]) extends Value with Produc
 ```
 
 
- `val comment: Seq[Markup]`
-----------------------------
+ val comment: Seq[Markup]
+--------------------------
 
 * Definition Classes
   * Package → Item
 
 
 
- `val id: Id.Value`
---------------------
+ val id: Id.Value
+------------------
 
 * Definition Classes
   * Package → Item
 
 
 
- `def signature: String`
--------------------------
+ def signature: String
+-----------------------
 
 * Definition Classes
   * Item

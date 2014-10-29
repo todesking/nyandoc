@@ -6,14 +6,14 @@ case class DlItem(dt: Seq[Markup], dd: Seq[Markup]) extends Product with Seriali
 ```
 
 
- `val dd: Seq[Markup]`
------------------------
+ val dd: Seq[Markup]
+---------------------
 
 (defined at com.todesking.dox.Markup.DlItem#dd:Seq[Markup])
 
 
- `val dt: Seq[Markup]`
------------------------
+ val dt: Seq[Markup]
+---------------------
 
 (defined at com.todesking.dox.Markup.DlItem#dt:Seq[Markup])
 

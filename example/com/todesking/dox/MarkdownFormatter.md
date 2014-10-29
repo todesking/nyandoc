@@ -6,7 +6,7 @@ class MarkdownFormatter extends AnyRef
 ```
 
 
- `def format(item: Item, repo: Repository): String`
-----------------------------------------------------
+ def format(item: Item, repo: Repository): String
+--------------------------------------------------
 
 

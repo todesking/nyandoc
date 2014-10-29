@@ -6,8 +6,8 @@ case class Italic(contents: Seq[Markup]) extends Markup with Product with Serial
 ```
 
 
- `val contents: Seq[Markup]`
------------------------------
+ val contents: Seq[Markup]
+---------------------------
 
 (defined at com.todesking.dox.Markup.Italic#contents:Seq[Markup])
 

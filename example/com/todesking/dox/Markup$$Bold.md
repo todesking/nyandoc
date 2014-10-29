@@ -6,8 +6,8 @@ case class Bold(contents: Seq[Markup]) extends Markup with Product with Serializ
 ```
 
 
- `val contents: Seq[Markup]`
------------------------------
+ val contents: Seq[Markup]
+---------------------------
 
 (defined at com.todesking.dox.Markup.Bold#contents:Seq[Markup])
 

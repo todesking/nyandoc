@@ -6,7 +6,7 @@ sealed class TypeKind extends AnyRef
 ```
 
 
- `val signature: String`
--------------------------
+ val signature: String
+-----------------------
 
 

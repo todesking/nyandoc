@@ -6,14 +6,14 @@ case class LinkInternal(title: String, id: String) extends Markup with Product w
 ```
 
 
- `val id: String`
-------------------
+ val id: String
+----------------
 
 (defined at com.todesking.dox.Markup.LinkInternal#id:String)
 
 
- `val title: String`
----------------------
+ val title: String
+-------------------
 
 (defined at com.todesking.dox.Markup.LinkInternal#title:String)
 

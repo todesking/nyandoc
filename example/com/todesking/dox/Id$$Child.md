@@ -6,14 +6,14 @@ sealed abstract class Child extends Id
 ```
 
 
- `abstract def changeParent(parent: Id): Child`
-------------------------------------------------
+ abstract def changeParent(parent: Id): Child
+----------------------------------------------
 
 (defined at com.todesking.dox.Id.Child#changeParent(Id):Child)
 
 
- `abstract def childFullName(name: String): String`
-----------------------------------------------------
+ abstract def childFullName(name: String): String
+--------------------------------------------------
 
 * Definition Classes
   * Id
@@ -21,8 +21,8 @@ sealed abstract class Child extends Id
 (defined at com.todesking.dox.Id#childFullName(String):String)
 
 
- `val fullName: String`
-------------------------
+ val fullName: String
+----------------------
 
 * Definition Classes
   * Child → Id
@@ -30,8 +30,8 @@ sealed abstract class Child extends Id
 (defined at com.todesking.dox.Id.Child#fullName:String)
 
 
- `def isAncestorOf(id: Id): Boolean`
--------------------------------------
+ def isAncestorOf(id: Id): Boolean
+-----------------------------------
 
 * Definition Classes
   * Child → Id
@@ -39,8 +39,8 @@ sealed abstract class Child extends Id
 (defined at com.todesking.dox.Id.Child#isAncestorOf(Id):Boolean)
 
 
- `def isParentOf(id: Id): Boolean`
------------------------------------
+ def isParentOf(id: Id): Boolean
+---------------------------------
 
 * Definition Classes
   * Child → Id
@@ -48,8 +48,8 @@ sealed abstract class Child extends Id
 (defined at com.todesking.dox.Id.Child#isParentOf(Id):Boolean)
 
 
- `abstract val localName: String`
-----------------------------------
+ abstract val localName: String
+--------------------------------
 
 * Definition Classes
   * Child → Id
@@ -57,14 +57,14 @@ sealed abstract class Child extends Id
 (defined at com.todesking.dox.Id.Child#localName:String)
 
 
- `abstract val parentId: Id`
------------------------------
+ abstract val parentId: Id
+---------------------------
 
 (defined at com.todesking.dox.Id.Child#parentId:Id)
 
 
- `def relNameFrom(base: Id): String`
--------------------------------------
+ def relNameFrom(base: Id): String
+-----------------------------------
 
 * Definition Classes
   * Child → Id
@@ -72,8 +72,8 @@ sealed abstract class Child extends Id
 (defined at com.todesking.dox.Id.Child#relNameFrom(Id):String)
 
 
- `def toString(): String`
---------------------------
+ def toString(): String
+------------------------
 
 * Definition Classes
   * Id → AnyRef → Any

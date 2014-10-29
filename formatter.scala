@@ -210,7 +210,7 @@ class MarkdownFormatter {
       case _ => true
     }.foreach {child =>
       renderer.layout.newLine()
-      renderer.h2bar("`" + child.signature + "`")
+      renderer.h2bar(child.signature)
       renderer.render(child.comment)
 
       child match {

@@ -6,24 +6,24 @@ case class Object(id: Id.Value, signature: String, comment: Seq[Markup]) extends
 ```
 
 
- `val comment: Seq[Markup]`
-----------------------------
+ val comment: Seq[Markup]
+--------------------------
 
 * Definition Classes
   * Object → Item
 
 
 
- `val id: Id.Value`
---------------------
+ val id: Id.Value
+------------------
 
 * Definition Classes
   * Object → Item
 
 
 
- `val signature: String`
--------------------------
+ val signature: String
+-----------------------
 
 * Definition Classes
   * Object → Item

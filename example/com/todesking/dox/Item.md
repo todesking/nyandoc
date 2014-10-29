@@ -6,17 +6,17 @@ sealed abstract class Item extends AnyRef
 ```
 
 
- `val comment: Seq[Markup]`
-----------------------------
+ val comment: Seq[Markup]
+--------------------------
 
 
 
- `val id: Id`
---------------
+ val id: Id
+------------
 
 
 
- `def signature: String`
--------------------------
+ def signature: String
+-----------------------
 
 

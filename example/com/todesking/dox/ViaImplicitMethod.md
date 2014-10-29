@@ -6,39 +6,39 @@ case class ViaImplicitMethod(id: Id.Value, params: MethodParams, resultType: Res
 ```
 
 
- `val comment: Seq[Markup]`
-----------------------------
+ val comment: Seq[Markup]
+--------------------------
 
 * Definition Classes
   * ViaImplicitMethod → Item
 
 
 
- `val id: Id.Value`
---------------------
+ val id: Id.Value
+------------------
 
 * Definition Classes
   * ViaImplicitMethod → Item
 
 
 
- `val originalId: Id.Value`
+ val originalId: Id.Value
+--------------------------
+
+
+
+ val params: MethodParams
+--------------------------
+
+
+
+ val resultType: ResultType
 ----------------------------
 
 
 
- `val params: MethodParams`
-----------------------------
-
-
-
- `val resultType: ResultType`
-------------------------------
-
-
-
- `val signature: String`
--------------------------
+ val signature: String
+-----------------------
 
 * Definition Classes
   * ViaImplicitMethod → Method → Item

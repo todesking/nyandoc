@@ -6,8 +6,8 @@ object Trait extends TypeKind with Product with Serializable
 ```
 
 
- `val signature: String`
--------------------------
+ val signature: String
+-----------------------
 
 * Definition Classes
   * TypeKind

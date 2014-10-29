@@ -6,29 +6,29 @@ case class Type(id: Id.Type, kind: TypeKind, signature: String, comment: Seq[Mar
 ```
 
 
- `val comment: Seq[Markup]`
-----------------------------
+ val comment: Seq[Markup]
+--------------------------
 
 * Definition Classes
   * Type → Item
 
 
 
- `val id: Id.Type`
--------------------
+ val id: Id.Type
+-----------------
 
 * Definition Classes
   * Type → Item
 
 
 
- `val kind: TypeKind`
-----------------------
+ val kind: TypeKind
+--------------------
 
 
 
- `val signature: String`
--------------------------
+ val signature: String
+-----------------------
 
 * Definition Classes
   * Type → Item

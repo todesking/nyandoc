@@ -6,14 +6,14 @@ object Id
 ```
 
 
- `def Type(fullName: String): ChildType`
------------------------------------------
+ def Type(fullName: String): ChildType
+---------------------------------------
 
 (defined at com.todesking.dox.Id#Type(String):ChildType)
 
 
- `def Value(fullName: String): ChildValue`
--------------------------------------------
+ def Value(fullName: String): ChildValue
+-----------------------------------------
 
 (defined at com.todesking.dox.Id#Value(String):ChildValue)
 

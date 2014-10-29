@@ -6,8 +6,8 @@ sealed class Value extends Item
 ```
 
 
- `def signature: String`
--------------------------
+ def signature: String
+-----------------------
 
 * Definition Classes
   * Item

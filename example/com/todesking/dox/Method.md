@@ -6,8 +6,8 @@ abstract class Method extends Value
 ```
 
 
- `val signature: String`
--------------------------
+ val signature: String
+-----------------------
 
 * Definition Classes
   * Method → Item

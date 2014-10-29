@@ -6,8 +6,8 @@ object TextCleaner
 ```
 
 
- `def clean(s: String): String`
---------------------------------
+ def clean(s: String): String
+------------------------------
 
 (defined at com.todesking.dox.JsoupExt.TextCleaner#clean(String):String)
 

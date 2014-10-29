@@ -6,8 +6,8 @@ case class UnorderedList(items: Seq[ListItem]) extends Markup with Product with 
 ```
 
 
- `val items: Seq[ListItem]`
-----------------------------
+ val items: Seq[ListItem]
+--------------------------
 
 (defined at com.todesking.dox.Markup.UnorderedList#items:Seq[ListItem])
 

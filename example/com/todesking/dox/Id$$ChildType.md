@@ -6,8 +6,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 ```
 
 
- `def changeParent(newParent: Id): ChildType`
-----------------------------------------------
+ def changeParent(newParent: Id): ChildType
+--------------------------------------------
 
 * Definition Classes
   * ChildType → Child
@@ -15,8 +15,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.ChildType#changeParent(Id):ChildType)
 
 
- `def childFullName(name: String): String`
--------------------------------------------
+ def childFullName(name: String): String
+-----------------------------------------
 
 * Definition Classes
   * Type → Id
@@ -24,8 +24,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.Type#childFullName(String):String)
 
 
- `val fullName: String`
-------------------------
+ val fullName: String
+----------------------
 
 * Definition Classes
   * Child → Id
@@ -33,8 +33,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.Child#fullName:String)
 
 
- `def isAncestorOf(id: Id): Boolean`
--------------------------------------
+ def isAncestorOf(id: Id): Boolean
+-----------------------------------
 
 * Definition Classes
   * Child → Id
@@ -42,8 +42,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.Child#isAncestorOf(Id):Boolean)
 
 
- `def isParentOf(id: Id): Boolean`
------------------------------------
+ def isParentOf(id: Id): Boolean
+---------------------------------
 
 * Definition Classes
   * Child → Id
@@ -51,8 +51,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.Child#isParentOf(Id):Boolean)
 
 
- `val localName: String`
--------------------------
+ val localName: String
+-----------------------
 
 * Definition Classes
   * ChildType → Child → Id
@@ -60,8 +60,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.ChildType#localName:String)
 
 
- `val parentId: Id`
---------------------
+ val parentId: Id
+------------------
 
 * Definition Classes
   * ChildType → Child
@@ -69,8 +69,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.ChildType#parentId:Id)
 
 
- `def relNameFrom(base: Id): String`
--------------------------------------
+ def relNameFrom(base: Id): String
+-----------------------------------
 
 * Definition Classes
   * Child → Id
@@ -78,8 +78,8 @@ sealed case class ChildType(parentId: Id, localName: String) extends Child with 
 (defined at com.todesking.dox.Id.Child#relNameFrom(Id):String)
 
 
- `def toString(): String`
---------------------------
+ def toString(): String
+------------------------
 
 * Definition Classes
   * Id → AnyRef → Any

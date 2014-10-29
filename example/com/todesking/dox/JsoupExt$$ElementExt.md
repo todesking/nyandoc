@@ -6,14 +6,14 @@ implicit class ElementExt[A <: Element] extends AnyRef
 ```
 
 
- `def /(query: String): Elements`
-----------------------------------
+ def /(query: String): Elements
+--------------------------------
 
 (defined at com.todesking.dox.JsoupExt.ElementExt#/(String):Elements)
 
 
- `def cleanText(): String`
----------------------------
+ def cleanText(): String
+-------------------------
 
 (defined at com.todesking.dox.JsoupExt.ElementExt#cleanText():String)
 

@@ -6,8 +6,8 @@ case class Paragraph(children: Seq[Markup]) extends Markup with Product with Ser
 ```
 
 
- `val children: Seq[Markup]`
------------------------------
+ val children: Seq[Markup]
+---------------------------
 
 (defined at com.todesking.dox.Markup.Paragraph#children:Seq[Markup])
 
