@@ -1,6 +1,36 @@
 package com.todesking.dox
 
-object Markdown {
+class Markdown(
+  val optimalWidth:Int = 80
+) {
+  def render(markups:Seq[Markup]):String =
+    markups.map(render(_)).mkString("")
+
+  def render(markup:Markup):String = {
+    markup match {
+      case Markup.Text(content) =>
+        content
+      case Markup.Paragraph(children) =>
+        paragraph(children.map(render(_)).mkString(""))
+      case Markup.Dl(items) =>
+        definitionList(items.map {item => (render(item.dt), render(item.dd))})
+      case Markup.Code(content) =>
+        code(content)
+      case Markup.CodeInline(content) =>
+        inlineCode(content)
+      case Markup.LinkInternal(title, id) =>
+        link(title, id.fullName)
+      case Markup.LinkExternal(title, url) =>
+        link(title, url)
+      case Markup.Bold(contents) =>
+        bold(contents.map(render(_)).mkString(""))
+      case Markup.Italic(contents) =>
+        italic(contents.map(render(_)).mkString(""))
+      case Markup.UnorderedList(items) =>
+        unorderedList(items.map{li => render(li.contents)})
+    }
+  }
+
   def code(str:String):String = s"""
     |```scala
     |${str}
@@ -45,16 +75,16 @@ object Markdown {
 class MarkdownFormatter {
   def format(item:Item, repo:Repository):String = {
     val sb = new scala.collection.mutable.StringBuilder
-    import Markdown._
+    val renderer = new Markdown(80)
 
-    sb.append(h(1)(item.id.fullName))
-    sb.append(code(item.signature))
-    item.comment.map(formatMarkup(_)).foreach(sb.append(_))
+    sb.append(renderer.h(1)(item.id.fullName))
+    sb.append(renderer.code(item.signature))
+    sb.append(renderer.render(item.comment))
 
     repo.childrenOf(item).sortBy(_.id.fullName).foreach {child =>
       sb.append('\n')
-      sb.append(h2bar(inlineCode(child.signature)))
-      child.comment.map(formatMarkup(_)).foreach(sb.append(_))
+      sb.append(renderer.h2bar(renderer.inlineCode(child.signature)))
+      sb.append(renderer.render(child.comment))
 
       child match {
         case c:ViaImplicitMethod =>
@@ -67,33 +97,5 @@ class MarkdownFormatter {
     }
 
     sb.toString
-  }
-
-  def formatMarkup(markups:Seq[Markup]):String =
-    markups.map(formatMarkup(_)).mkString("")
-
-  def formatMarkup(markup:Markup):String = {
-    import Markdown._
-    markup match {
-      case Markup.Text(content) => content
-      case Markup.Paragraph(children) =>
-        paragraph(children.map(formatMarkup(_)).mkString(""))
-      case Markup.Dl(items) =>
-        definitionList(items.map {item => (formatMarkup(item.dt), formatMarkup(item.dd))})
-      case Markup.Code(content) =>
-        code(content)
-      case Markup.CodeInline(content) =>
-        inlineCode(content)
-      case Markup.LinkInternal(title, id) =>
-        link(title, id.fullName)
-      case Markup.LinkExternal(title, url) =>
-        link(title, url)
-      case Markup.Bold(contents) =>
-        bold(contents.map(formatMarkup(_)).mkString(""))
-      case Markup.Italic(contents) =>
-        italic(contents.map(formatMarkup(_)).mkString(""))
-      case Markup.UnorderedList(items) =>
-        unorderedList(items.map{li => formatMarkup(li.contents)})
-    }
   }
 }
