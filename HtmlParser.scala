@@ -31,9 +31,13 @@ object HtmlParser {
   }
 
   def parse(doc:Document):Option[(Item, Seq[Item])] = {
-    // TODO: Linear supertypes
-    // TODO: Known subclasses
-    val fullName = doc / """#definition .permalink a[title=Permalink]""" firstOpt() map(_.attr("href").replaceAll(""".*index\.html#""", "")) getOrElse ""
+    val fullName = (for {
+        script <- (doc / "head > script").filter(_.data().contains("var hash =")).headOption
+        data = script.data()
+        m <- """(?m).*var hash = '(.+)'.*""".r.findFirstMatchIn(data)
+      } yield m.group(1)
+    ) getOrElse ""
+    println(fullName)
     if(fullName isEmpty()) {
       println("  => Skipped")
       return None
