@@ -69,7 +69,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
       } else {
         currentLine += spaced
       }
-    } else if(needNewLine(width(str))) {
+    } else if(needNewLine(width(str)) && canNextLine(str)) {
       newLine()
       currentLine += str
     } else {
@@ -86,8 +86,12 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
       case _ => true
     })
   }
+
   private[this] def needNewLine(w:Int):Boolean =
     indentLevel < width(currentLine) && w + width(currentLine) > optimalWidth
+
+  private[this] def canNextLine(s:String):Boolean =
+    "!.,:;)]}>".contains(s(0)).unary_!
 
   private[this] def width(line:String):Int = {
     line.length
