@@ -1,8 +1,61 @@
 package com.todesking.dox
 
-class Markdown(
-  val optimalWidth:Int = 80
-) {
+class Layout(optimalWidth:Int, private var indentLevel:Int) {
+  import scala.collection.mutable
+  val lines = mutable.ArrayBuffer.empty[String]
+  var currentLine:String = ""
+
+  def appendLine(str:String):Unit = {
+    appendBreakable0(str)
+    newLine()
+  }
+
+  def appendText(str:String):Unit = {
+    val lines = str.split("\n")
+    assert(lines.nonEmpty)
+    lines.dropRight(1).foreach {line =>
+      appendBreakable0(line)
+      newLine()
+    }
+    appendBreakable0(lines.last)
+  }
+
+  def appendUnbreakable(str:String):Unit =
+    str.split("\n").foreach(appendBreakable0(_))
+
+  def indent(n:Int):Unit = {
+    require(indentLevel + n >= 0)
+    indentLevel += n
+  }
+
+  def newLine():Unit = {
+    lines += currentLine.replaceAll("""\s+$""", "")
+    currentLine = " " * indentLevel
+  }
+
+  private[this] def appendBreakable0(str:String):Unit = {
+    val words = str.split("""\s+""").filter(_.isEmpty)
+    words.foreach { word =>
+      appendUnbreakable0(" " + word)
+    }
+  }
+  private[this] def appendUnbreakable0(str:String):Unit = {
+    if(currentLine == " " * indentLevel) {
+      currentLine += str
+    } else if(width(currentLine) + width(str) <= optimalWidth) {
+      currentLine += str
+    } else {
+      newLine()
+      currentLine += str
+    }
+  }
+
+  private[this] def width(line:String):Int = {
+    line.length
+  }
+}
+
+class Markdown() {
   def render(markups:Seq[Markup]):String =
     markups.map(render(_)).mkString("")
 
@@ -36,6 +89,10 @@ class Markdown(
 
   def renderInline(markup:Markup):String =
     markup match {
+      case Markup.Paragraph(children) =>
+        renderInline(children)
+      case Markup.Code(content) =>
+        inlineCode(content)
       case x => render(x)
     }
 
@@ -83,7 +140,7 @@ class Markdown(
 class MarkdownFormatter {
   def format(item:Item, repo:Repository):String = {
     val sb = new scala.collection.mutable.StringBuilder
-    val renderer = new Markdown(80)
+    val renderer = new Markdown()
 
     sb.append(renderer.h(1)(item.id.fullName))
     sb.append(renderer.code(item.signature))
