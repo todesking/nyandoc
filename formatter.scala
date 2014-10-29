@@ -63,16 +63,16 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
       currentLine += str
     } else if(needSpacing && needSpacingBeyond(currentLine.last, str)) {
       val spaced = " " + str
-      if(isFitInCurrentLine(width(spaced))) {
-        currentLine += spaced
-      } else {
+      if(needNewLine(width(spaced))) {
         newLine()
         currentLine += str
+      } else {
+        currentLine += spaced
       }
-    } else if(isFitInCurrentLine(width(str))) {
+    } else if(needNewLine(width(str))) {
+      newLine()
       currentLine += str
     } else {
-      newLine()
       currentLine += str
     }
   }
@@ -86,8 +86,8 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
       case _ => true
     })
   }
-  private[this] def isFitInCurrentLine(w:Int):Boolean =
-    w + width(currentLine) <= optimalWidth
+  private[this] def needNewLine(w:Int):Boolean =
+    indentLevel < width(currentLine) && w + width(currentLine) > optimalWidth
 
   private[this] def width(line:String):Int = {
     line.length
