@@ -2,7 +2,7 @@ package com.todesking.dox
 
 class Layout(optimalWidth:Int, private var indentLevel:Int) {
   import scala.collection.mutable
-  private val lines = mutable.ArrayBuffer.empty[String]
+  private var lines = mutable.ArrayBuffer.empty[String]
   private var currentLine:String = ""
 
   override def toString() =
@@ -34,9 +34,14 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     }
   }
 
-  def terminateLine():Unit =
-    if(currentLine.nonEmpty && currentLine != " " * indentLevel)
+  def terminateLine():Unit = {
+    if(currentLine.nonEmpty && currentLine != " " * indentLevel) {
       newLine()
+    } else {
+      if(lines.nonEmpty && lines.last.isEmpty)
+        lines = lines.dropRight(1)
+    }
+  }
 
   def newLine():Unit = {
     lines += currentLine.replaceAll("""\s+$""", "")
@@ -125,7 +130,6 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           render(item.contents)
           layout.indent(-2)
           layout.terminateLine()
-          layout.newLine()
         }
     }
   }
