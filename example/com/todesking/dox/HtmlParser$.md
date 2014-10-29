@@ -1,0 +1,246 @@
+# com.todesking.dox.HtmlParser$
+
+
+```scala
+object HtmlParser
+```
+
+
+ `final def !=(arg0: Any): Boolean`
+------------------------------------
+
+* Definition Classes
+  * Any
+
+(defined at scala.Any#!=(Any):Boolean)
+
+
+ `final def !=(arg0: AnyRef): Boolean`
+---------------------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#!=(AnyRef):Boolean)
+
+
+ `final def ##(): Int`
+-----------------------
+
+* Definition Classes
+  * AnyRef → Any
+
+(defined at scala.AnyRef###():Int)
+
+
+ `final def ==(arg0: Any): Boolean`
+------------------------------------
+
+* Definition Classes
+  * Any
+
+(defined at scala.Any#==(Any):Boolean)
+
+
+ `final def ==(arg0: AnyRef): Boolean`
+---------------------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#==(AnyRef):Boolean)
+
+
+ `final def asInstanceOf[T0]: T0`
+----------------------------------
+
+* Definition Classes
+  * Any
+
+(defined at scala.Any#asInstanceOf[T0]:T0)
+
+
+ `def clone(): AnyRef`
+-----------------------
+
+* Attributes
+  * protected[java.lang]
+* Definition Classes
+  * AnyRef
+* Annotations
+  * @throws (...)
+
+(defined at scala.AnyRef#clone():AnyRef)
+
+
+ `final def eq(arg0: AnyRef): Boolean`
+---------------------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#eq(AnyRef):Boolean)
+
+
+ `def equals(arg0: Any): Boolean`
+----------------------------------
+
+* Definition Classes
+  * AnyRef → Any
+
+(defined at scala.AnyRef#equals(Any):Boolean)
+
+
+ `def extractDlMarkup(dl: Node): Seq[Markup]`
+----------------------------------------------
+
+(defined at com.todesking.dox.HtmlParser#extractDlMarkup(Node):Seq[Markup])
+
+
+ `def extractMarkup(elm: Node): Seq[Markup]`
+---------------------------------------------
+
+(defined at com.todesking.dox.HtmlParser#extractMarkup(Node):Seq[Markup])
+
+
+ `def extractMarkup0(elm: Node): Seq[Markup]`
+----------------------------------------------
+
+(defined at com.todesking.dox.HtmlParser#extractMarkup0(Node):Seq[Markup])
+
+
+ `def extractValueMembers(parentId: Id, doc: Document): Seq[Item]`
+-------------------------------------------------------------------
+
+(defined at com.todesking.dox.HtmlParser#extractValueMembers(Id,Document):Seq[Item])
+
+
+ `def finalize(): Unit`
+------------------------
+
+* Attributes
+  * protected[java.lang]
+* Definition Classes
+  * AnyRef
+* Annotations
+  * @throws (classOf[java.lang.Throwable])
+
+(defined at scala.AnyRef#finalize():Unit)
+
+
+ `final def getClass(): Class[_]`
+----------------------------------
+
+* Definition Classes
+  * AnyRef → Any
+
+(defined at scala.AnyRef#getClass():Class[_])
+
+
+ `def hashCode(): Int`
+-----------------------
+
+* Definition Classes
+  * AnyRef → Any
+
+(defined at scala.AnyRef#hashCode():Int)
+
+
+ `final def isInstanceOf[T0]: Boolean`
+---------------------------------------
+
+* Definition Classes
+  * Any
+
+(defined at scala.Any#isInstanceOf[T0]:Boolean)
+
+
+ `final def ne(arg0: AnyRef): Boolean`
+---------------------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#ne(AnyRef):Boolean)
+
+
+ `final def notify(): Unit`
+----------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#notify():Unit)
+
+
+ `final def notifyAll(): Unit`
+-------------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#notifyAll():Unit)
+
+
+ `def parse(doc: Document): Option[(Item, Seq[Item])]`
+-------------------------------------------------------
+
+(defined at com.todesking.dox.HtmlParser#parse(Document):Option[(Item,Seq[Item])])
+
+
+ `def parse(file: File, charset: Charset = StandardCharsets.UTF_8): Option[(Item, Seq[Item])]`
+-----------------------------------------------------------------------------------------------
+
+(defined at com.todesking.dox.HtmlParser#parse(File,Charset):Option[(Item,Seq[Item])])
+
+
+ `final def synchronized[T0](arg0: ⇒ T0): T0`
+----------------------------------------------
+
+* Definition Classes
+  * AnyRef
+
+(defined at scala.AnyRef#synchronized[T0](⇒T0):T0)
+
+
+ `def toString(): String`
+--------------------------
+
+* Definition Classes
+  * AnyRef → Any
+
+(defined at scala.AnyRef#toString():String)
+
+
+ `final def wait(): Unit`
+--------------------------
+
+* Definition Classes
+  * AnyRef
+* Annotations
+  * @throws (...)
+
+(defined at scala.AnyRef#wait():Unit)
+
+
+ `final def wait(arg0: Long): Unit`
+------------------------------------
+
+* Definition Classes
+  * AnyRef
+* Annotations
+  * @throws (...)
+
+(defined at scala.AnyRef#wait(Long):Unit)
+
+
+ `final def wait(arg0: Long, arg1: Int): Unit`
+-----------------------------------------------
+
+* Definition Classes
+  * AnyRef
+* Annotations
+  * @throws (...)
+
+(defined at scala.AnyRef#wait(Long,Int):Unit)
+

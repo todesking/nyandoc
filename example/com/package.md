@@ -1,0 +1,7 @@
+# com.package
+
+
+```scala
+package
+```
+
