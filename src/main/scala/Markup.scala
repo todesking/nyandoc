@@ -20,7 +20,7 @@ object Markup {
 
   object Normalize {
     def apply(markups:Seq[Markup]):Seq[Markup] =
-      doRecursive(dropEmpty _ andThen textFusion)(markups)
+      doRecursive(dropEmpty _ andThen removeEmptyLink andThen removeInternalLink andThen textFusion)(markups)
 
     def doRecursive(f:Seq[Markup]=>Seq[Markup])(markups:Seq[Markup]):Seq[Markup] = {
       def doR(ms:Seq[Markup]) = doRecursive(f)(ms)
@@ -52,6 +52,20 @@ object Markup {
             Seq()
         case other => Seq(other)
       }
+    }
+
+    def removeEmptyLink(markups:Seq[Markup]) = markups.map {
+      case LinkExternal(title, "") =>
+        Text(title)
+      case x =>
+        x
+    }
+
+    def removeInternalLink(markups:Seq[Markup]) = markups.map {
+      case LinkExternal(title, url) if(url.startsWith(".")) =>
+        Text(title)
+      case x =>
+        x
     }
 
     def textFusion(markups:Seq[Markup]) =
