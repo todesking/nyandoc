@@ -2,24 +2,27 @@ package com.todesking.dox
 
 class Layout(optimalWidth:Int, private var indentLevel:Int) {
   import scala.collection.mutable
-  val lines = mutable.ArrayBuffer.empty[String]
-  var currentLine:String = ""
+  private val lines = mutable.ArrayBuffer.empty[String]
+  private var currentLine:String = ""
 
   override def toString() =
     lines.mkString("\n") + currentLine + "\n"
 
-  def appendText(str:String):Unit = {
+  def appendText(str:String):Unit =
+    doMultiLine(str)(appendBreakable0)
+
+  def appendUnbreakable(str:String):Unit =
+    doMultiLine(str)(appendUnbreakable0)
+
+  private[this] def doMultiLine(str:String)(f:String => Unit):Unit = {
     val lines = str.split("\n")
     assert(lines.nonEmpty)
     lines.dropRight(1).foreach {line =>
-      appendBreakable0(line)
+      f(line)
       newLine()
     }
-    appendBreakable0(lines.last)
+    f(lines.head)
   }
-
-  def appendUnbreakable(str:String):Unit =
-    str.split("\n").foreach { line => appendUnbreakable0(line); newLine() }
 
   def indent(n:Int):Unit = {
     require(indentLevel + n >= 0)
@@ -31,6 +34,10 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     }
   }
 
+  def terminateLine():Unit =
+    if(currentLine.nonEmpty && currentLine != " " * indentLevel)
+      newLine()
+
   def newLine():Unit = {
     lines += currentLine.replaceAll("""\s+$""", "")
     currentLine = " " * indentLevel
@@ -39,14 +46,14 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   private[this] def appendBreakable0(str:String):Unit = {
     val words = str.split("""\s+""").filter(_.nonEmpty)
     words.foreach { word =>
-      appendUnbreakable0(" " + word)
+      appendUnbreakable0(word + " ")
     }
   }
 
   private[this] def appendUnbreakable0(str:String):Unit = {
     if(currentLine == " " * indentLevel) {
       currentLine += str
-    } else if(width(currentLine) + width(str) <= optimalWidth) {
+    } else if(width(currentLine) + width(str) <= optimalWidth || width(currentLine) <= indentLevel) {
       currentLine += str
     } else {
       newLine()
@@ -66,10 +73,10 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
   def render(markup:Markup):Unit = {
     markup match {
       case Markup.Text(content) =>
-        layout.appendText(content)
+        layout.appendText(normalize(content))
       case Markup.Paragraph(children) =>
-        layout.newLine()
         children.foreach {c => render(c) }
+        layout.terminateLine()
         layout.newLine()
       case Markup.Dl(items) =>
         items.foreach {item =>
@@ -77,26 +84,27 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           layout.indent(2)
           render(item.dt)
           layout.indent(-2)
-          layout.newLine()
+          layout.terminateLine()
 
           layout.indent(2)
           layout.appendText("* ")
           layout.indent(2)
           render(item.dd)
           layout.indent(-2 * 2)
-          layout.newLine()
+          layout.terminateLine()
         }
+        layout.newLine()
       case Markup.Code(content) =>
         layout.newLine()
         layout.appendUnbreakable("```scala")
         layout.newLine()
-        layout.appendUnbreakable(content)
+        layout.appendUnbreakable(normalizeMultiLine(content))
         layout.newLine()
         layout.appendUnbreakable("```")
         layout.newLine()
         layout.newLine()
       case Markup.CodeInline(content) =>
-        layout.appendUnbreakable("`" + content + "`")
+        layout.appendUnbreakable("`" + normalize(content) + "`")
       case Markup.LinkInternal(title, id) =>
         link(title, id.fullName)
       case Markup.LinkExternal(title, url) =>
@@ -116,10 +124,17 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           layout.indent(2)
           render(item.contents)
           layout.indent(-2)
+          layout.terminateLine()
           layout.newLine()
         }
     }
   }
+
+  def normalize(s:String):String =
+    """(?m)\s+""".r.replaceAllIn(s, " ")
+
+  def normalizeMultiLine(s:String) =
+    """(?m)\A\n+|\n+\z""".r.replaceAllIn(s, "")
 
   def h(level:Int)(str:String):Unit = {
     layout.appendUnbreakable(("#" * level) + " " + str)
