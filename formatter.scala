@@ -206,7 +206,7 @@ class MarkdownFormatter {
     }.filter {
       case item:ViaInheritMethod =>
         Seq("scala.Any", "scala.AnyRef").contains(item.originalId match { case c:Id.Child => c.parentId.fullName; case _ => "" }).unary_!
-      case _:ViaImplicitMethod => false
+      case _:ViaImplicitMethod => true
       case _ => true
     }.foreach {child =>
       renderer.layout.newLine()
