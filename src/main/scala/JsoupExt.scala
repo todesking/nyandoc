@@ -27,6 +27,8 @@ object JsoupExt {
     def /(query:String) = self.select(query)
     def firstOpt():Option[Element] = Option(self.first())
     def lastOpt():Option[Element] = Option(self.last())
+    def firstOrDie():Element = firstOpt() getOrElse { throw new RuntimeException("element not found") }
+    def lastOrDie():Element = lastOpt() getOrElse { throw new RuntimeException("element not found") }
   }
 
   implicit def Elements2Collection(self:Elements) = self.asScala

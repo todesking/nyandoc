@@ -64,6 +64,12 @@ object Main {
     }
   }
 
-  def destFileOf(dir:java.io.File, id:Id):java.io.File =
-    new java.io.File(dir, id.fullName.replaceAll("""\.""", java.io.File.separator) + ".md")
+  def destFileOf(dir:java.io.File, id:Id):java.io.File = {
+    id match {
+      case _:Id.Type =>
+        new java.io.File(dir, id.fullName.replaceAll("""\.""", "/") + ".md")
+      case _:Id.Value =>
+        new java.io.File(dir, id.fullName.replaceAll("""\.""", "/") + "$.md")
+    }
+  }
 }

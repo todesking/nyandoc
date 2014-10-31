@@ -224,7 +224,11 @@ case class ViaInheritMethod(
   override val comment:Seq[Markup]
 ) extends Method(id, params, resultType, signature, comment)
 
-case class Package(override val id:Id.Value, override val comment:Seq[Markup]) extends Value(id, comment)
+case class Package(
+  override val id:Id.Value,
+  override val signature:String,
+  override val comment:Seq[Markup]
+) extends Value(id, comment)
 
 trait Repository {
   def isTopLevel(item:Item) = {
