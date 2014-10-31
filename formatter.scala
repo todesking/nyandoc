@@ -21,7 +21,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
       f(line)
       newLine()
     }
-    f(lines.head)
+    f(lines.last)
   }
 
   private[this] def hasCurrentLineContent():Boolean =
