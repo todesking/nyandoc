@@ -78,7 +78,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   }
 
   private[this] def needSpacingBeyond(c:Char, s:String):Boolean = {
-    (s(0) match {
+    s.nonEmpty && (s(0) match {
       case ' ' | ')' | ']' | ';' | '.' | ',' => false
       case _ => true
     }) && (c match {
@@ -136,19 +136,19 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.newLine()
         layout.newLine()
       case Markup.CodeInline(content) =>
-        layout.appendUnbreakable("`" + normalize(content) + "`")
+        layout.appendUnbreakable(" `" + normalize(content) + "` ")
       case Markup.LinkInternal(title, id) =>
         layout.appendText(normalize(title))
       case Markup.LinkExternal(title, url) =>
         link(title, url)
       case Markup.Bold(contents) =>
-        layout.appendUnbreakable("*")
+        layout.appendUnbreakable(" *")
         render(contents)
-        layout.appendUnbreakable("*")
+        layout.appendUnbreakable("* ")
       case Markup.Italic(contents) =>
-        layout.appendUnbreakable("_")
+        layout.appendUnbreakable(" _")
         render(contents)
-        layout.appendUnbreakable("_")
+        layout.appendUnbreakable("_ ")
       case Markup.UnorderedList(items) =>
         layout.newLine()
         items.foreach {item =>
