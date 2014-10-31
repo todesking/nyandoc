@@ -17,6 +17,7 @@ object Markup {
   case class CodeInline(content:String) extends Markup
   case class Bold(contents:Seq[Markup]) extends Markup
   case class Italic(contents:Seq[Markup]) extends Markup
+  case class Sup(contents:Seq[Markup]) extends Markup
 
   case class Heading(contents:Seq[Markup]) extends Markup
 

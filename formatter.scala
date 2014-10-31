@@ -4,6 +4,15 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   import scala.collection.mutable
   private var lines = mutable.ArrayBuffer.empty[String]
   private var currentLine:String = ""
+  private var cancelNextSpacing_ = false
+
+  def cancelNextSpacing():Unit =
+    cancelNextSpacing_ = true
+
+  def cancelSpacing():Unit = {
+    cancelNextSpacing()
+    currentLine = currentLine.replaceAll("""\s+\z""", "")
+  }
 
   override def toString() =
     lines.mkString("\n") + currentLine + "\n"
@@ -61,7 +70,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   private[this] def appendUnbreakable0(str:String, needSpacing:Boolean):Unit = {
     if(!hasCurrentLineContent) {
       currentLine += str
-    } else if(needSpacing && needSpacingBeyond(currentLine.last, str)) {
+    } else if(needSpacing && !cancelNextSpacing_ && needSpacingBeyond(currentLine.last, str)) {
       val spaced = " " + str
       if(needNewLine(width(spaced))) {
         newLine()
@@ -75,6 +84,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     } else {
       currentLine += str
     }
+    cancelNextSpacing_ = false
   }
 
   private[this] def needSpacingBeyond(c:Char, s:String):Boolean = {
@@ -164,6 +174,12 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         render(contents)
         layout.terminateLine()
         layout.newLine()
+      case Markup.Sup(contents) =>
+        layout.appendUnbreakable("<sup>")
+        layout.cancelNextSpacing()
+        render(contents)
+        layout.cancelSpacing()
+        layout.appendUnbreakable("</sup>")
     }
   }
 
