@@ -72,7 +72,6 @@ object HtmlParser {
             Id.ChildType(parent, elm.cleanText())
         }
       }
-    println(parentId)
     for {
       localNameE <- doc / "#definition > h1" firstOpt()
       localName = localNameE cleanText()
