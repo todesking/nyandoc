@@ -27,10 +27,10 @@ object HtmlParser {
     }
     val html = sb.toString
     val baseUri = ""
-    parse2(Jsoup.parse(html, baseUri))
+    parse(Jsoup.parse(html, baseUri))
   }
 
-  def parse2(doc:Document):Option[(Item, Seq[Item])] = {
+  def parse(doc:Document):Option[(Item, Seq[Item])] = {
     for {
       top <- extractToplevelItem(doc)
       members = extractMembers(top.id, doc)
@@ -153,69 +153,6 @@ object HtmlParser {
         case _ =>
           throw errorUnknown("item kind", kind)
       }
-
-  def parse(doc:Document):Option[(Item, Seq[Item])] = {
-    val fullName = (for {
-        script <- (doc / "head > script").filter(_.data().contains("var hash =")).headOption
-        data = script.data()
-        m <- """(?m).*var hash = '(.+)'.*""".r.findFirstMatchIn(data)
-      } yield m.group(1)
-    ) getOrElse ""
-    println(fullName)
-    if(fullName isEmpty()) {
-      println("  => Skipped")
-      return None
-    }
-    val kind:String = doc / "#signature > .modifier_kind > .kind" first() cleanText()
-    val signature = doc / "#signature" first() cleanText()
-    val comment = doc / "#comment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
-    val entity =
-      kind match {
-        case "trait" | "class" | "case class" | "type" =>
-          Type(Id.Type(fullName), TypeKind.forName(kind), signature, comment)
-        case "object" =>
-          Object(Id.Value(fullName), signature, comment)
-        case "package" =>
-          Package(Id.Value(fullName), signature, comment)
-        case unk => errorUnknown("Item kind", unk)
-      }
-    println(s"  => $fullName")
-    Some(entity, extractValueMembers(entity.id, doc))
-  }
-
-  def extractValueMembers(parentId:Id, doc:Document):Seq[Item] = {
-    (doc / "#values > ol > li").map {elm =>
-      val id = Id.Value(elm.attr("name"))
-      val kind = ValueKind.forName(
-        elm / "> .signature > .modifier_kind > .kind" firstOpt() map(_.text()) getOrElse "kind not found")
-      val comment =
-        elm / "> .fullcomment" firstOpt() map(extractMarkup(_)) match {
-          case Some(a) => a
-          case None => elm / ".shortcomment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
-        }
-      def signature = elm / ".signature" last() text()
-      kind match {
-        case ValueKind.Def | ValueKind.Val | ValueKind.Var =>
-          val params = MethodParams(elm / ".signature > .symbol > .params" text())
-          val resultType = ResultType(elm / ".signature > .symbol > .result" text() replaceAll("^: ", ""))
-          val subId = elm / "> a:eq(1)" attr("id") replaceAll("""\.""", "/")
-          val fullId = Id.ChildValue(id.parentId, subId)
-
-          def signature = elm / ".signature" last() text()
-          if(parentId.isParentOf(fullId))
-            DefinedMethod(fullId, params, resultType, signature, comment)
-          else if((elm / ".signature > .symbol > .implicit").nonEmpty)
-            ViaImplicitMethod(fullId.changeParent(parentId), params, resultType, signature, fullId, comment)
-          else
-            ViaInheritMethod(fullId.changeParent(parentId), params, resultType, signature, fullId, comment)
-        case ValueKind.Object =>
-          val newId = Id.Value(id.fullName + "$") // :(
-          Object(newId, signature, comment)
-        case ValueKind.Package =>
-          Package(id, signature, comment)
-      }
-    }
-  }
 
   def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] =
     Markup.normalize(extractMarkup0(elm))
