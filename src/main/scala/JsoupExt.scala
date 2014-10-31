@@ -18,6 +18,7 @@ object JsoupExt {
     def cleanText():String =
       TextCleaner.clean(self.text())
   }
+
   implicit class TextNodeExt[A <: nodes.TextNode](self:A) {
     def cleanText():String =
       TextCleaner.clean(self.text())

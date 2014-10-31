@@ -209,8 +209,12 @@ object HtmlParser {
     }.flatten
   }
 
-  def extractDlMarkup(dl:org.jsoup.nodes.Node):Seq[Markup] = {
+  def extractDlMarkup(dl:Element):Seq[Markup] = {
     import org.jsoup.{nodes => n}
+
+    // sometimes insane markup was found. Like <dl> <b> <dt>...</dt> <dd>...</dd> </b> </dl>
+    if((dl / "> b").size > 0)
+      return extractDlMarkup(dl / "> b" firstOrDie())
 
     var dtPrev:org.jsoup.nodes.Node = null
     val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
@@ -229,6 +233,7 @@ object HtmlParser {
         // code example
         others ++= extractMarkup0(div)
       case t:n.TextNode =>
+        // just ignore
       case other =>
         unsupportedFeature("markup(dl)", other.toString)
     }
