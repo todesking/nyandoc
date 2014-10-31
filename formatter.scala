@@ -158,6 +158,12 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           layout.indent(-2)
           layout.terminateLine()
         }
+      case Markup.Heading(contents) =>
+        layout.newLine()
+        layout.appendUnbreakable("### ")
+        render(contents)
+        layout.terminateLine()
+        layout.newLine()
     }
   }
 

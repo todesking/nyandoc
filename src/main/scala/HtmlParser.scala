@@ -197,6 +197,8 @@ object HtmlParser {
         }
       case Tag("ul", e) =>
         Seq(UnorderedList(e / "> li" map {li =>ListItem(extractMarkup(li))}))
+      case Tag("h4", e) =>
+        Seq(Heading(extractMarkup(e)))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.toString)
         Seq(Text(e.cleanText()))
