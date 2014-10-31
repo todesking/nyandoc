@@ -187,6 +187,8 @@ object HtmlParser {
         Seq(CodeInline(e.text()))
       case Tag("b", e) =>
         Seq(Bold(extractMarkup(e)))
+      case Tag("em", e) =>
+        Seq(Bold(extractMarkup(e)))
       case Tag("i", e) =>
         Seq(Italic(extractMarkup(e)))
       case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example
