@@ -96,7 +96,7 @@ object HtmlParser {
 
   def extractMemberItem(topId:Id, elm:Element):Item = {
     val id = extractMemberId(topId, elm)
-    val kind = elm / "> .signature > .modifier_kind > .kind" firstOrDie() cleanText()
+    val kind = elm / ".signature > .modifier_kind > .kind" firstOrDie() cleanText()
     val comment =
       elm / "> .fullcomment" firstOpt() map(extractMarkup(_)) orElse {
         elm / ".shortcomment" firstOpt() map(extractMarkup(_))
@@ -139,7 +139,7 @@ object HtmlParser {
     val localName = elm / ".signature > .symbol .name" firstOpt() getOrElse {
       elm / ".signature > .symbol .implicit" firstOrDie()
     } cleanText()
-    val kind = elm / "> .signature > .modifier_kind > .kind" firstOrDie() cleanText()
+    val kind = elm / ".signature > .modifier_kind > .kind" firstOrDie() cleanText()
     buildId(topId, localName, kind)
   }
 
