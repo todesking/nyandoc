@@ -119,12 +119,6 @@ object Id {
   }
 }
 
-sealed class ItemKind
-object ItemKind {
-  object Type extends ItemKind
-  object Value extends ItemKind
-}
-
 sealed class TypeKind(val signature:String)
 object TypeKind {
   case object Trait extends TypeKind("trait")
@@ -139,33 +133,6 @@ object TypeKind {
     case "type" => Type
     case unk => errorUnknown("TypeKind", unk)
   }
-}
-
-sealed abstract class ValueKind
-object ValueKind {
-  case object Val extends ValueKind
-  case object Var extends ValueKind
-  case object Object extends ValueKind
-  case object Def extends ValueKind
-  case object Package extends ValueKind
-
-  def forName(name:String):ValueKind = {
-    name match {
-      case "val" | "lazy val" => Val
-      case "var" => Var
-      case "object" => Object
-      case "def" => Def
-      case "package" => Package
-      case unk => errorUnknown("ValueKind", unk)
-    }
-  }
-}
-
-sealed class Scope
-object Scope {
-  case class Private() extends Scope
-  case class Protected() extends Scope
-  case class Public() extends Scope
 }
 
 case class MethodParams(signature:String)
