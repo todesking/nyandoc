@@ -136,14 +136,14 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         items.foreach {item =>
           layout.appendText("* ")
           layout.withIndent(2) {
-            render(item.dt)
+            renderInline(item.dt)
             layout.terminateLine()
           }
 
           layout.withIndent(2) {
             layout.appendText("* ")
             layout.withIndent(2) {
-              render(item.dd)
+              renderInline(item.dd)
               layout.terminateLine()
             }
           }
@@ -166,13 +166,13 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
       case Markup.Bold(contents) =>
         layout.appendUnbreakable(" *")
         layout.cancelSpacing()
-        render(contents)
+        renderInline(contents)
         layout.cancelSpacing()
         layout.appendUnbreakable("* ")
       case Markup.Italic(contents) =>
         layout.appendUnbreakable(" _")
         layout.cancelSpacing()
-        render(contents)
+        renderInline(contents)
         layout.cancelSpacing()
         layout.appendUnbreakable("_ ")
       case Markup.UnorderedList(items) =>
@@ -180,7 +180,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         items.foreach {item =>
           layout.appendUnbreakable("* ")
           layout.withIndent(2) {
-            render(item.contents)
+            renderInline(item.contents)
           }
           layout.terminateLine()
         }
@@ -188,14 +188,25 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
       case Markup.Heading(contents) =>
         layout.requireEmptyLines(1)
         layout.appendUnbreakable("### ")
-        render(contents)
+        renderInline(contents)
         layout.requireEmptyLines(1)
       case Markup.Sup(contents) =>
         layout.appendUnbreakable("<sup>")
         layout.cancelSpacing()
-        render(contents)
+        renderInline(contents)
         layout.cancelSpacing()
         layout.appendUnbreakable("</sup>")
+    }
+  }
+
+  def renderInline(markups:Seq[Markup]):Unit =
+    markups.foreach(renderInline(_))
+  def renderInline(markup:Markup):Unit = {
+    markup match {
+      case Markup.Paragraph(contents) =>
+        renderInline(contents)
+      case _ =>
+        render(markup)
     }
   }
 
