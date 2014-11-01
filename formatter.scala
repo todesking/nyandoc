@@ -11,6 +11,8 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     currentLine = currentLine.replaceAll("""\s+\z""", "")
   }
 
+  def restWidth:Int = optimalWidth - indentLevel
+
   override def toString() =
     lines.mkString("\n") + currentLine + "\n"
 
@@ -100,7 +102,7 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   private[this] def canNextLine(s:String):Boolean =
     "!.,:;)]}>".contains(s(0)).unary_!
 
-  private[this] def width(line:String):Int = {
+  def width(line:String):Int = {
     line.length
   }
 }
@@ -190,8 +192,10 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
   def normalizeMultiLine(s:String) =
     """(?m)\A\n+|\n+\z""".r.replaceAllIn(s, "")
 
-  def h(level:Int)(str:String):Unit = {
-    layout.appendUnbreakable(("#" * level) + " " + str)
+  def h(level:Int, fill:Boolean = false)(str:String):Unit = {
+    val base = ("#" * level) + " " + str
+    val markup = if(fill) (base + " " + "#" * ((layout.restWidth - layout.width(base)) max 0)) else ""
+    layout.appendUnbreakable(markup)
     layout.newLine()
     layout.newLine()
   }
@@ -217,36 +221,33 @@ class MarkdownFormatter {
     renderer.render(Markup.Code(item.signature))
     renderer.render(item.comment)
 
-    repo.childrenOf(item).sortBy {child =>
-      val orderByKind =
-        child match {
-          case _:DefinedMethod => 0
-          case _:ViaInheritMethod => 1
-          case _:ViaImplicitMethod => 2
-          case _ => 100
-        }
-      (orderByKind, child.id.fullName)
-    }.filter {
-      case item:ViaInheritMethod =>
-        Seq("scala.Any", "scala.AnyRef").contains(item.originalId match { case c:Id.Child => c.parentId.fullName; case _ => "" }).unary_!
-      case _:ViaImplicitMethod => true
-      case _ => true
-    }.foreach {child =>
-      renderer.layout.newLine()
-      renderer.h2bar(child.signature)
-      renderer.render(child.comment)
+    repo.childrenWithCategory(item).
+      groupBy(_._2).
+      toSeq.
+      sortBy(_._1).
+      map {case (categoryName, group) =>
+        (categoryName, group.map(_._1).sortBy(_.id.fullName))
+      }.foreach {case (categoryName, children) =>
+        renderer.h2bar(categoryName)
+        renderer.layout.newLine()
+        children.foreach {child =>
+          renderer.h(3, fill = true)(child.signature)
+          renderer.render(child.comment)
 
-      child match {
-        case c:ViaImplicitMethod =>
-          renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
+          child match {
+            case c:ViaImplicitMethod =>
+              renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
+              renderer.layout.newLine()
+            case c:ViaInheritMethod =>
+              renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
+              renderer.layout.newLine()
+            case _ =>
+          }
+          renderer.layout.terminateLine()
           renderer.layout.newLine()
-        case c:ViaInheritMethod =>
-          renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
           renderer.layout.newLine()
-        case _ =>
+        }
       }
-      renderer.layout.newLine()
-    }
 
     renderer.layout.toString()
 

@@ -11,7 +11,10 @@ object HtmlParser {
   import JsoupExt._
   import scala.collection.JavaConverters._
 
-  def parse(file:File, charset:Charset = StandardCharsets.UTF_8):Option[(Item, Seq[Item])] = {
+  // members: Seq[(categoryName:String, Item)]
+  case class Result(topItem:Item, members:Seq[(String, Item)])
+
+  def parse(file:File, charset:Charset = StandardCharsets.UTF_8):Option[Result] = {
     import java.io._
     val sb = new StringBuilder
     val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset))
@@ -30,11 +33,11 @@ object HtmlParser {
     parse(Jsoup.parse(html, baseUri))
   }
 
-  def parse(doc:Document):Option[(Item, Seq[Item])] = {
+  def parse(doc:Document):Option[Result] = {
     for {
       top <- extractToplevelItem(doc)
       members = extractMembers(top.id, doc)
-    } yield (top, members)
+    } yield Result(top, members)
   }
 
   def extractToplevelItem(doc:Document):Option[Item] = {
@@ -82,14 +85,14 @@ object HtmlParser {
     }
   }
 
-  def extractMembers(topId:Id, doc:Document):Seq[Item] = {
+  def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
     doc / "#allMembers > div" flatMap {catElm =>
       val categoryName = catElm / "> h3" first() cleanText()
       if(categoryName == "Shadowed Implicit Value Members")
         Seq()
       else
         catElm / "> ol > li" map {itemElm =>
-          extractMemberItem(topId, itemElm)
+          (categoryName, extractMemberItem(topId, itemElm))
         }
     }
   }

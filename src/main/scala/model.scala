@@ -209,19 +209,22 @@ trait Repository {
   def topLevelItems():Seq[Item]
   def parentOf(item:Item):Option[Item]
   def childrenOf(item:Item):Seq[Item]
+  def childrenWithCategory(item:Item):Seq[(Item, String)]
 }
 
 object Repository {
-  def apply(items:Seq[(Item, Seq[Item])]):Repository = {
+  def apply(items:Seq[HtmlParser.Result]):Repository = {
     import scala.collection.mutable.{HashMap, Set, MultiMap}
     val id2item = new HashMap[Id, Item]
+    val id2categoryName = new HashMap[Id, String]
     for {
-      (item, subItems) <- items
+      result <- items
     } {
-      id2item.put(item.id, item)
-      subItems.foreach {sub =>
-        if(!id2item.contains(sub.id))
-          id2item.put(sub.id, sub)
+      id2item.put(result.topItem.id, result.topItem)
+      result.members.foreach {case (categoryName, subItem) =>
+        if(!id2item.contains(subItem.id))
+          id2item.put(subItem.id, subItem)
+        id2categoryName.put(subItem.id, categoryName)
       }
     }
     val id2children = new HashMap[Id, Set[Id]] with MultiMap[Id, Id]
@@ -246,6 +249,8 @@ object Repository {
         id2children.get(item.id) map { cids =>
           cids.flatMap {cid => id2item.get(cid)}.toSeq
         } getOrElse Seq()
+      override def childrenWithCategory(item:Item):Seq[(Item, String)] =
+        childrenOf(item).map {c => c -> id2categoryName.get(c.id).getOrElse("")}
     }
   }
 }

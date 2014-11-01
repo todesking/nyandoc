@@ -23,7 +23,7 @@ object Main {
     }
   }
 
-  def parse(file:File):Seq[(Item, Seq[Item])] = {
+  def parse(file:File):Seq[HtmlParser.Result] = {
     if(file.isDirectory) {
       file.listFiles.flatMap(parse(_))
     } else if(!file.exists()) {
@@ -38,7 +38,7 @@ object Main {
     }
   }
 
-  def parse0(file:File):Option[(Item, Seq[Item])] = {
+  def parse0(file:File):Option[HtmlParser.Result] = {
     HtmlParser.parse(file)
   }
 
