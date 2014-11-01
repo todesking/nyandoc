@@ -26,10 +26,14 @@ object Main {
   def parse(file:File):Seq[(Item, Seq[Item])] = {
     if(file.isDirectory) {
       file.listFiles.flatMap(parse(_))
+    } else if(!file.exists()) {
+      println(s"WARN: Not found: $file")
+      Seq()
     } else if(file.getName.endsWith(".html")){
       println(s"Processing: ${file}")
       parse0(file).toSeq
     } else {
+      println(s"WARN: Unknown filetype: $file")
       Seq()
     }
   }
