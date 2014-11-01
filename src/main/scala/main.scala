@@ -31,7 +31,10 @@ object Main {
       Seq()
     } else if(file.getName.endsWith(".html")){
       println(s"Processing: ${file}")
-      parse0(file).toSeq
+      HtmlParser.parse(file).toSeq
+    } else if(file.getName.endsWith(".jar")) {
+      println(s"Processing: ${file}")
+      parseJar(file)
     } else {
       println(s"WARN: Unknown filetype: $file")
       Seq()
@@ -40,6 +43,28 @@ object Main {
 
   def parse0(file:File):Option[HtmlParser.Result] = {
     HtmlParser.parse(file)
+  }
+
+  def parseJar(file:File):Seq[HtmlParser.Result] = {
+    import java.util.jar._
+    import java.io._
+    import IOExt._
+
+    val jis = new JarInputStream(new FileInputStream(file))
+    val reader = new BufferedReader(new InputStreamReader(jis))
+    val results = scala.collection.mutable.ArrayBuffer.empty[HtmlParser.Result]
+    try {
+      var entry:JarEntry = null
+      while({entry = jis.getNextJarEntry(); entry != null}) {
+        println(s"ENTRY: ${entry.getName}")
+        if(entry.getName.endsWith(".html")) {
+          results ++= HtmlParser.parse(jis.readAll()).toSeq
+        }
+      }
+      results.toSeq
+    } finally {
+      jis.close()
+    }
   }
 
   def generate(repo:Repository, dest:File):Unit = {

@@ -28,9 +28,12 @@ object HtmlParser {
     } finally {
       reader.close()
     }
-    val html = sb.toString
+    parse(sb.toString)
+  }
+
+  def parse(content:String):Option[Result] = {
     val baseUri = ""
-    parse(Jsoup.parse(html, baseUri))
+    parse(Jsoup.parse(content, baseUri))
   }
 
   def parse(doc:Document):Option[Result] = {
