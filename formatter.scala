@@ -217,16 +217,28 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
     """(?m)\A\n+|\n+\z""".r.replaceAllIn(s, "")
 
   def h(level:Int, fill:Boolean = false)(str:String):Unit = {
-    val base = ("#" * level) + " " + str
-    val markup = if(fill) (base + " " + "#" * ((layout.restWidth - layout.width(base)) max 0)) else ""
+    val markup =
+      if(fill) {
+        val padWidth = (layout.restWidth - layout.width(str) - ((level + 1) * 2)).max(0)./(2).max(1)
+        ("#" * level) + (" " * padWidth) + str + (" " * padWidth) + " " + ("#" * level)
+      } else {
+        "#" * level + " " + str
+      }
     layout.appendUnbreakable(markup)
     layout.requireEmptyLines(1)
   }
 
   def h2bar(str:String):Unit = {
-    layout.appendUnbreakable(s"${str}")
+    layout.requireEmptyLines(1)
+
+    val line = "-" * layout.restWidth
+    val pad = " " * (layout.restWidth - layout.width(str)).max(0)./(2)
+    layout.appendUnbreakable(line)
     layout.newLine()
-    layout.appendUnbreakable(s"${"-" * (str.length)}")
+    layout.appendUnbreakable(pad + str)
+    layout.newLine()
+    layout.appendUnbreakable(line)
+
     layout.requireEmptyLines(1)
   }
 
@@ -239,7 +251,7 @@ class MarkdownFormatter {
   def format(item:Item, repo:Repository):String = {
     val renderer = new Markdown()
 
-    renderer.h(1)(item.id.fullName)
+    renderer.h(1, fill = true)(item.id.fullName)
     renderer.render(Markup.Code(item.signature))
     renderer.render(item.comment)
 
