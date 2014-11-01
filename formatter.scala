@@ -11,6 +11,12 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     currentLine = currentLine.replaceAll("""\s+\z""", "")
   }
 
+  def requireEmptyLines(n:Int):Unit = {
+    terminateLine()
+    val emptyLines = lines.reverse.takeWhile(_.isEmpty).size
+    0 until ((n - emptyLines) max 0) foreach { _=> newLine() }
+  }
+
   def restWidth:Int = optimalWidth - indentLevel
 
   override def toString() =
@@ -120,6 +126,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.terminateLine()
         layout.newLine()
       case Markup.Dl(items) =>
+        layout.requireEmptyLines(1)
         items.foreach {item =>
           layout.appendText("* ")
           layout.indent(2)
@@ -136,7 +143,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         }
         layout.newLine()
       case Markup.Code(content) =>
-        layout.newLine()
+        layout.requireEmptyLines(1)
         layout.appendUnbreakable("```scala")
         layout.newLine()
         layout.appendUnbreakable(normalizeMultiLine(content))
@@ -163,7 +170,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.cancelSpacing()
         layout.appendUnbreakable("_ ")
       case Markup.UnorderedList(items) =>
-        layout.newLine()
+        layout.requireEmptyLines(1)
         items.foreach {item =>
           layout.appendUnbreakable("* ")
           layout.indent(2)
@@ -172,7 +179,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           layout.terminateLine()
         }
       case Markup.Heading(contents) =>
-        layout.newLine()
+        layout.requireEmptyLines(1)
         layout.appendUnbreakable("### ")
         render(contents)
         layout.terminateLine()
@@ -196,16 +203,14 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
     val base = ("#" * level) + " " + str
     val markup = if(fill) (base + " " + "#" * ((layout.restWidth - layout.width(base)) max 0)) else ""
     layout.appendUnbreakable(markup)
-    layout.newLine()
-    layout.newLine()
+    layout.requireEmptyLines(1)
   }
 
   def h2bar(str:String):Unit = {
     layout.appendUnbreakable(s"${str}")
     layout.newLine()
     layout.appendUnbreakable(s"${"-" * (str.length)}")
-    layout.newLine()
-    layout.newLine()
+    layout.requireEmptyLines(1)
   }
 
   def link(title:String, url:String):Unit = {
@@ -228,24 +233,22 @@ class MarkdownFormatter {
       map {case (categoryName, group) =>
         (categoryName, group.map(_._1).sortBy(_.id.fullName))
       }.foreach {case (categoryName, children) =>
+        renderer.layout.requireEmptyLines(2)
         renderer.h2bar(categoryName)
-        renderer.layout.newLine()
         children.foreach {child =>
+          renderer.layout.requireEmptyLines(2)
           renderer.h(3, fill = true)(child.signature)
           renderer.render(child.comment)
 
           child match {
             case c:ViaImplicitMethod =>
+              renderer.layout.requireEmptyLines(1)
               renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
-              renderer.layout.newLine()
             case c:ViaInheritMethod =>
+              renderer.layout.requireEmptyLines(1)
               renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
-              renderer.layout.newLine()
             case _ =>
           }
-          renderer.layout.terminateLine()
-          renderer.layout.newLine()
-          renderer.layout.newLine()
         }
       }
 
