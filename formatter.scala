@@ -51,6 +51,12 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
     }
   }
 
+  def withIndent(n:Int)(f: =>Unit):Unit = {
+    indent(n)
+    f
+    indent(-n)
+  }
+
   def terminateLine():Unit = {
     if(hasCurrentLineContent) {
       newLine()
@@ -122,24 +128,25 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
       case Markup.Text(content) =>
         layout.appendText(normalize(content))
       case Markup.Paragraph(children) =>
+        layout.requireEmptyLines(1)
         children.foreach {c => render(c) }
-        layout.terminateLine()
-        layout.newLine()
+        layout.requireEmptyLines(1)
       case Markup.Dl(items) =>
         layout.requireEmptyLines(1)
         items.foreach {item =>
           layout.appendText("* ")
-          layout.indent(2)
-          render(item.dt)
-          layout.indent(-2)
-          layout.terminateLine()
+          layout.withIndent(2) {
+            render(item.dt)
+            layout.terminateLine()
+          }
 
-          layout.indent(2)
-          layout.appendText("* ")
-          layout.indent(2)
-          render(item.dd)
-          layout.indent(-2 * 2)
-          layout.terminateLine()
+          layout.withIndent(2) {
+            layout.appendText("* ")
+            layout.withIndent(2) {
+              render(item.dd)
+              layout.terminateLine()
+            }
+          }
         }
         layout.newLine()
       case Markup.Code(content) =>
@@ -149,8 +156,7 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.appendUnbreakable(normalizeMultiLine(content))
         layout.newLine()
         layout.appendUnbreakable("```")
-        layout.newLine()
-        layout.newLine()
+        layout.requireEmptyLines(1)
       case Markup.CodeInline(content) =>
         layout.appendUnbreakable(" `" + normalize(content) + "` ")
       case Markup.LinkInternal(title, id) =>
@@ -173,17 +179,17 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.requireEmptyLines(1)
         items.foreach {item =>
           layout.appendUnbreakable("* ")
-          layout.indent(2)
-          render(item.contents)
-          layout.indent(-2)
+          layout.withIndent(2) {
+            render(item.contents)
+          }
           layout.terminateLine()
         }
+        layout.requireEmptyLines(1)
       case Markup.Heading(contents) =>
         layout.requireEmptyLines(1)
         layout.appendUnbreakable("### ")
         render(contents)
-        layout.terminateLine()
-        layout.newLine()
+        layout.requireEmptyLines(1)
       case Markup.Sup(contents) =>
         layout.appendUnbreakable("<sup>")
         layout.cancelSpacing()
