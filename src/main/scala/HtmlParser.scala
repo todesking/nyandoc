@@ -270,17 +270,19 @@ object JavadocHtmlParser {
 
   def extractToplevelItem(doc:Document):Option[Item] = {
     for {
+     _ <- doc / ".details" firstOpt()
      ns <- doc / ".header > .subtitle" firstOpt() map(_.cleanText().split("""\."""))
      sig <- doc / ".header > .title" firstOpt() map(_.cleanText())
     } yield {
       val nsId = ns.foldLeft[Id](Id.Root) {(parent, name) => Id.ChildValue(parent, name)}
-      val sigR = """^(Class|Interface|Enum)\s+([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)(<.*>)?$""".r
+      val sigR = """^(Class|Interface|Enum|Annotation Type)\s+([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)(<.*>)?$""".r
 
       sig match {
         case sigR(kind, name, targs) =>
           val id = Id.ChildType(nsId, name)
           // TODO: It may need more specialized version for javadoc.
-          val comment = ScaladocHtmlParser.extractMarkup(doc / ".contentContainer > .description > .blockList > .blockList > .block" firstOrDie())
+          val comment =
+            doc / ".contentContainer > .description > .blockList > .blockList > .block" firstOpt() map(ScaladocHtmlParser.extractMarkup(_)) getOrElse Seq()
           val detailedSig = doc / ".contentContainer > .description > .blockList > .blockList > pre" firstOrDie() cleanText()
           // TODO: restructure TypeKind
           Type(id, TypeKind.Trait, detailedSig, comment)
