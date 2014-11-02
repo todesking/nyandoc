@@ -195,6 +195,8 @@ object ScaladocHtmlParser {
         Seq(Code(e.text()))
       case Tag("code", e) =>
         Seq(CodeInline(e.text()))
+      case Tag("tt", e) =>
+        Seq(CodeInline(e.text()))
       case Tag("b", e) =>
         Seq(Bold(extractMarkup(e)))
       case Tag("em", e) =>
@@ -253,7 +255,7 @@ object ScaladocHtmlParser {
 
 object JavadocHtmlParser {
   import org.jsoup.Jsoup
-  import org.jsoup.nodes.{Document, Element}
+  import org.jsoup.nodes.{Document, Element, TextNode}
 
   import LibGlobal._
   import JsoupExt._
@@ -289,6 +291,28 @@ object JavadocHtmlParser {
   }
 
   def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
-    Seq()
+    doc / ".details > ul.blocklist > li.blockList > ul.blocklist" flatMap {group =>
+      val categoryName = group / "> li > h3" firstOrDie() cleanText()
+      val members = scala.collection.mutable.ArrayBuffer.empty[(String, Item)]
+      var curName:String = null
+      (group / "> li.blockList").firstOrDie().childNodes().asScala.foreach {
+        case Tag("a", a) =>
+          curName = a.attr("name")
+        case Tag("ul", ul) if(curName != null)=>
+          // first 2 elements is header(method name and signature)
+          val comment = ul / "> li > *:gt(2)" flatMap(ScaladocHtmlParser.extractMarkup(_))
+          val id = Id.ChildValue(topId, curName)
+          val signature = ul / "> li > pre" firstOrDie() cleanText()
+          members += categoryName -> DefinedMethod(id, MethodParams(""), ResultType(""), signature, comment)
+          curName = null
+        case Tag("h3", _) =>
+          // ignore
+        case _:TextNode =>
+          // ignore
+        case tag =>
+          unsupportedFeature("member list DOM", tag.toString)
+      }
+      members
+    }
   }
 }
