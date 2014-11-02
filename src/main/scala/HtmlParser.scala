@@ -27,7 +27,8 @@ object HtmlParser {
 
   def parse(content:String):Option[Result] = {
     val baseUri = ""
-    ScaladocHtmlParser.parse(Jsoup.parse(content, baseUri))
+    val doc = Jsoup.parse(content, baseUri)
+    ScaladocHtmlParser.parse(doc) orElse JavadocHtmlParser.parse(doc)
   }
 }
 
@@ -247,5 +248,47 @@ object ScaladocHtmlParser {
         unsupportedFeature("markup(dl)", other.toString)
     }
     return Markup.Dl(items) +: others
+  }
+}
+
+object JavadocHtmlParser {
+  import org.jsoup.Jsoup
+  import org.jsoup.nodes.{Document, Element}
+
+  import LibGlobal._
+  import JsoupExt._
+  import scala.collection.JavaConverters._
+
+  def parse(doc:Document):Option[HtmlParser.Result] = {
+    for {
+      top <- extractToplevelItem(doc)
+      members = extractMembers(top.id, doc)
+    } yield HtmlParser.Result(top, members)
+  }
+
+  def extractToplevelItem(doc:Document):Option[Item] = {
+    for {
+     ns <- doc / ".header > .subtitle" firstOpt() map(_.cleanText().split("""\."""))
+     sig <- doc / ".header > .title" firstOpt() map(_.cleanText())
+    } yield {
+      val nsId = ns.foldLeft[Id](Id.Root) {(parent, name) => Id.ChildValue(parent, name)}
+      val sigR = """^(Class|Interface|Enum)\s+([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)(<.*>)?$""".r
+
+      sig match {
+        case sigR(kind, name, targs) =>
+          val id = Id.ChildType(nsId, name)
+          // TODO: It may need more specialized version for javadoc.
+          val comment = ScaladocHtmlParser.extractMarkup(doc / ".contentContainer > .description > .blockList > .blockList > .block" firstOrDie())
+          val detailedSig = doc / ".contentContainer > .description > .blockList > .blockList > pre" firstOrDie() cleanText()
+          // TODO: restructure TypeKind
+          Type(id, TypeKind.Trait, detailedSig, comment)
+        case _ =>
+          errorUnknown("Javadoc signature", sig)
+      }
+    }
+  }
+
+  def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
+    Seq()
   }
 }
