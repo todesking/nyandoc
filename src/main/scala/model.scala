@@ -178,7 +178,7 @@ case class ViaImplicitMethod(
   params:MethodParams,
   resultType:ResultType,
   override val signature:String,
-  originalId:Id.Value,
+  originalId:String,
   override val comment:Seq[Markup]
 ) extends Method(id, params, resultType, signature, comment)
 
@@ -187,7 +187,7 @@ case class ViaInheritMethod(
   params:MethodParams,
   resultType:ResultType,
   override val signature:String,
-  originalId:Id.Value,
+  originalId:String,
   override val comment:Seq[Markup]
 ) extends Method(id, params, resultType, signature, comment)
 

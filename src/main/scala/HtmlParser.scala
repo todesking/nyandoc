@@ -127,7 +127,7 @@ object HtmlParser {
             if(permaLink.isEmpty)
               DefinedMethod(fullId, params, resultType, signature, comment)
             else {
-              val realId = Id.Value("__dummy__(not_implemented_yet)")
+              val realId = elm.attr("name").replaceAll("""#[^#.]+$""", "")
               if((elm / ".signature > .symbol > .implicit").nonEmpty)
                 ViaImplicitMethod(fullId, params, resultType, signature, realId, comment)
               else
