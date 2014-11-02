@@ -28,6 +28,18 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   def appendUnbreakable(str:String):Unit =
     doMultiLine(str)(appendUnbreakable0(_, needSpacing = true))
 
+  def appendEqualSpaced(parts:String*):Unit = {
+    parts.size match {
+      case 0 => newLine()
+      case 1 =>
+        val pad = " " * ((restWidth - width(parts(0))) / 2).max(0)
+        appendUnbreakable(pad + parts(0))
+      case _ =>
+        val pad = " " * ((restWidth - parts.map(width(_)).sum) / (parts.size - 1)).max(1)
+        appendUnbreakable(parts.mkString(pad))
+    }
+  }
+
   private[this] def doMultiLine(str:String)(f:String => Unit):Unit = {
     val lines = str.split("\n")
     assert(lines.nonEmpty)
@@ -216,15 +228,19 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
   def normalizeMultiLine(s:String) =
     """(?m)\A\n+|\n+\z""".r.replaceAllIn(s, "")
 
-  def h(level:Int, fill:Boolean = false)(str:String):Unit = {
-    val markup =
-      if(fill) {
-        val padWidth = (layout.restWidth - layout.width(str) - ((level + 1) * 2)).max(0)./(2).max(1)
-        ("#" * level) + (" " * padWidth) + str + (" " * padWidth) + " " + ("#" * level)
-      } else {
-        "#" * level + " " + str
-      }
-    layout.appendUnbreakable(markup)
+  def h(level:Int, fill:Boolean = false, centering:Boolean = false)(str:String):Unit = {
+    layout.requireEmptyLines(1)
+    (fill, centering) match {
+      case (false, false) =>
+        layout.appendUnbreakable("#" * level + " " + str)
+      case (false, true) =>
+        layout.appendUnbreakable("#" * level + " ")
+        layout.appendEqualSpaced(str)
+      case (true, false) =>
+        layout.appendEqualSpaced("#" * level + " " + str, "#" * level)
+      case (true, true) =>
+        layout.appendEqualSpaced("#" * level, str, "#" * level)
+    }
     layout.requireEmptyLines(1)
   }
 
@@ -232,10 +248,9 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
     layout.requireEmptyLines(1)
 
     val line = "-" * layout.restWidth
-    val pad = " " * (layout.restWidth - layout.width(str)).max(0)./(2)
     layout.appendUnbreakable(line)
     layout.newLine()
-    layout.appendUnbreakable(pad + str)
+    layout.appendEqualSpaced(str)
     layout.newLine()
     layout.appendUnbreakable(line)
 
@@ -251,7 +266,7 @@ class MarkdownFormatter {
   def format(item:Item, repo:Repository):String = {
     val renderer = new Markdown()
 
-    renderer.h(1, fill = true)(item.id.fullName)
+    renderer.h(1, fill = true, centering = true)(item.id.fullName)
     renderer.render(Markup.Code(item.signature))
     renderer.render(item.comment)
 
@@ -266,7 +281,7 @@ class MarkdownFormatter {
         renderer.h2bar(categoryName)
         children.foreach {child =>
           renderer.layout.requireEmptyLines(2)
-          renderer.h(3, fill = true)(child.signature)
+          renderer.h(3, fill = true, centering = false)(child.signature)
           renderer.render(child.comment)
 
           child match {
