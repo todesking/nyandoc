@@ -1,15 +1,9 @@
 package com.todesking.dox
 
-
 object HtmlParser {
   import java.io.File
   import java.nio.charset.{Charset, StandardCharsets}
   import org.jsoup.Jsoup
-  import org.jsoup.nodes.{Document, Element}
-
-  import LibGlobal._
-  import JsoupExt._
-  import scala.collection.JavaConverters._
 
   // members: Seq[(categoryName:String, Item)]
   case class Result(topItem:Item, members:Seq[(String, Item)])
@@ -33,14 +27,23 @@ object HtmlParser {
 
   def parse(content:String):Option[Result] = {
     val baseUri = ""
-    parse(Jsoup.parse(content, baseUri))
+    ScaladocHtmlParser.parse(Jsoup.parse(content, baseUri))
   }
+}
 
-  def parse(doc:Document):Option[Result] = {
+object ScaladocHtmlParser {
+  import org.jsoup.Jsoup
+  import org.jsoup.nodes.{Document, Element}
+
+  import LibGlobal._
+  import JsoupExt._
+  import scala.collection.JavaConverters._
+
+  def parse(doc:Document):Option[HtmlParser.Result] = {
     for {
       top <- extractToplevelItem(doc)
       members = extractMembers(top.id, doc)
-    } yield Result(top, members)
+    } yield HtmlParser.Result(top, members)
   }
 
   def extractToplevelItem(doc:Document):Option[Item] = {
