@@ -3,7 +3,7 @@ package com.todesking.dox
 sealed abstract class Markup
 object Markup {
   case class Paragraph(children:Seq[Markup]) extends Markup
-  case class Code(content:String) extends Markup
+  case class Code(content:String, language:String) extends Markup
 
   case class Dl(items:Seq[DlItem]) extends Markup
   case class DlItem(dt:Seq[Markup], dd:Seq[Markup])
@@ -51,7 +51,7 @@ object Markup {
           | Paragraph(Seq())
           | Dl(Seq())
           | UnorderedList(Seq())
-          | Code("")
+          | Code("", _)
           | CodeInline("")
           | Bold(Seq())
           | Italic(Seq())

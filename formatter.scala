@@ -161,9 +161,9 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           }
         }
         layout.newLine()
-      case Markup.Code(content) =>
+      case Markup.Code(content, language) =>
         layout.requireEmptyLines(1)
-        layout.appendUnbreakable("```scala")
+        layout.appendUnbreakable(s"```${language}")
         layout.newLine()
         layout.appendUnbreakable(normalizeMultiLine(content))
         layout.newLine()
@@ -267,7 +267,7 @@ class MarkdownFormatter {
     val renderer = new Markdown()
 
     renderer.h(1, fill = true, centering = true)(item.id.fullName)
-    renderer.render(Markup.Code(item.signature))
+    renderer.render(Markup.Code(item.signature, "")) // TODO
     renderer.render(item.comment)
 
     repo.childrenWithCategory(item).

@@ -164,7 +164,7 @@ object ScaladocHtmlParser {
       }
 
   def extractMarkup(elm:Node):Seq[Markup] =
-    HtmlToMarkup.extract(elm)
+    HtmlToMarkup.extract(elm, "scala")
 }
 
 object JavadocHtmlParser {
@@ -233,10 +233,15 @@ object JavadocHtmlParser {
   }
 
   def extractMarkup(elm:Node):Seq[Markup] =
-    HtmlToMarkup.extract(elm)
+    HtmlToMarkup.extract(elm, "java")
 }
 
 object HtmlToMarkup {
+  def extract(elm:org.jsoup.nodes.Node, codeLanguage:String):Seq[Markup] =
+    new HtmlToMarkup(codeLanguage).extract(elm)
+}
+
+class HtmlToMarkup(codeLanguage:String) {
   import org.jsoup.nodes.{Document, Element, Node}
 
   import JsoupExt._
@@ -279,7 +284,7 @@ object HtmlToMarkup {
         else
           extract0(e)
       case Tag("pre", e) =>
-        Seq(Code(e.text()))
+        Seq(Code(e.text(), codeLanguage))
       case Tag("code" | "tt", e) =>
         Seq(CodeInline(e.text()))
       case Tag("b" | "em" | "strong", e) =>
@@ -288,9 +293,9 @@ object HtmlToMarkup {
         Seq(Italic(extract(e)))
       case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example in scaladoc
         e / "> li.cmt > p > code" firstOpt() map {oneline =>
-          Seq(Code(oneline.text()))
+          Seq(Code(oneline.text(), codeLanguage))
         } getOrElse {
-          Seq(Code(e / "> li.cmt > pre" text()))
+          Seq(Code(e / "> li.cmt > pre" text(), codeLanguage))
         }
       case Tag("ul", e) =>
         Seq(UnorderedList(e / "> li" map {li =>ListItem(extract(li))}))
