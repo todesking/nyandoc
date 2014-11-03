@@ -208,7 +208,7 @@ object JavadocHtmlParser {
 
   def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
     doc / ".details > ul.blocklist > li.blockList > ul.blocklist" flatMap {group =>
-      val categoryName = group / "> li > h3" firstOrDie() cleanText()
+      val categoryName = group / "> li > h3" firstOpt() map(_.cleanText()) getOrElse "(default category)"
       val members = scala.collection.mutable.ArrayBuffer.empty[(String, Item)]
       var curName:String = null
       (group / "> li.blockList").firstOrDie().childNodes().asScala.foreach {
