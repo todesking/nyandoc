@@ -1,4 +1,11 @@
-# Dox: scaladoc/javadoc HTML parser
+# Dox: scaladoc/javadoc HTML parser / document generator
+
+## tl;dr
+
+* This software can convert javadoc/scaladoc html to markdown format.
+* Text-editor friendly!
+* Under development, but basically works.
+
 
 ## About
 
