@@ -34,7 +34,7 @@ object HtmlParser {
 
 object ScaladocHtmlParser {
   import org.jsoup.Jsoup
-  import org.jsoup.nodes.{Document, Element}
+  import org.jsoup.nodes.{Document, Element, Node}
 
   import LibGlobal._
   import JsoupExt._
@@ -163,95 +163,13 @@ object ScaladocHtmlParser {
           throw errorUnknown("item kind", kind)
       }
 
-  def extractMarkup(elm:org.jsoup.nodes.Node):Seq[Markup] =
-    Markup.normalize(extractMarkup0(elm))
-
-  def extractMarkup0(elm:org.jsoup.nodes.Node):Seq[Markup] = {
-    import Markup._
-    import org.jsoup.{nodes => n}
-    elm.childNodes.asScala.collect {
-      case c:n.TextNode => Seq(Text(c.cleanText()))
-      case Tag("p", e) =>
-        Seq(Paragraph(extractMarkup(e)))
-      case Tag("dl", e) =>
-        extractDlMarkup(e)
-      case Tag("a", e) =>
-        val url = e.attr("href")
-        if(url.startsWith("http:") || url.startsWith("https:") || url.startsWith("//")) {
-          Seq(LinkExternal(e.text(), url))
-        } else {
-          Seq(LinkInternal(e.text(), url))
-        }
-      case Tag("span", e) =>
-        extractMarkup0(e)
-      case Tag("br", e) =>
-        Seq(Text("\n"))
-      case Tag("div", e) =>
-        if(e.hasClass("toggleContainer"))
-          Seq()
-        else
-          extractMarkup0(e)
-      case Tag("pre", e) =>
-        Seq(Code(e.text()))
-      case Tag("code" | "tt", e) =>
-        Seq(CodeInline(e.text()))
-      case Tag("b" | "em" | "strong", e) =>
-        Seq(Bold(extractMarkup(e)))
-      case Tag("i", e) =>
-        Seq(Italic(extractMarkup(e)))
-      case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example
-        e / "> li.cmt > p > code" firstOpt() map {oneline =>
-          Seq(Code(oneline.text()))
-        } getOrElse {
-          Seq(Code(e / "> li.cmt > pre" text()))
-        }
-      case Tag("ul", e) =>
-        Seq(UnorderedList(e / "> li" map {li =>ListItem(extractMarkup(li))}))
-      case Tag("h4", e) =>
-        Seq(Heading(extractMarkup(e)))
-      case Tag("sup", e) =>
-        Seq(Sup(extractMarkup(e)))
-      case e:Element => // Treat as text if unknown element
-        unsupportedFeature("markup tag", e.toString)
-        Seq(Text(e.cleanText()))
-    }.flatten
-  }
-
-  def extractDlMarkup(dl:Element):Seq[Markup] = {
-    import org.jsoup.{nodes => n}
-
-    // sometimes insane markup was found. Like <dl> <b> <dt>...</dt> <dd>...</dd> </b> </dl>
-    if((dl / "> b").size > 0)
-      return extractDlMarkup(dl / "> b" firstOrDie())
-
-    var dtPrev:org.jsoup.nodes.Node = null
-    val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
-    val others = new scala.collection.mutable.ArrayBuffer[Markup]
-    dl.childNodes.asScala.foreach {
-      case Tag("dt", dt) =>
-        dtPrev = dt
-      case Tag("dd", dd) =>
-        if(dtPrev != null) {
-          items += Markup.DlItem(extractMarkup(dtPrev), extractMarkup(dd))
-          dtPrev = null
-        }
-      case Tag("div", div) if(div.hasClass("full-signature-block")) =>
-        // junk
-      case Tag("div", div) if(div.hasClass("block")) =>
-        // code example
-        others ++= extractMarkup0(div)
-      case t:n.TextNode =>
-        // just ignore
-      case other =>
-        unsupportedFeature("markup(dl)", other.toString)
-    }
-    return Markup.Dl(items) +: others
-  }
+  def extractMarkup(elm:Node):Seq[Markup] =
+    HtmlToMarkup.extract(elm)
 }
 
 object JavadocHtmlParser {
   import org.jsoup.Jsoup
-  import org.jsoup.nodes.{Document, Element, TextNode}
+  import org.jsoup.nodes.{Document, Element, Node, TextNode}
 
   import LibGlobal._
   import JsoupExt._
@@ -278,7 +196,7 @@ object JavadocHtmlParser {
           val id = Id.ChildType(nsId, name)
           // TODO: It may need more specialized version for javadoc.
           val comment =
-            doc / ".contentContainer > .description > .blockList > .blockList > .block" firstOpt() map(ScaladocHtmlParser.extractMarkup(_)) getOrElse Seq()
+            doc / ".contentContainer > .description > .blockList > .blockList > .block" firstOpt() map(extractMarkup(_)) getOrElse Seq()
           val detailedSig = doc / ".contentContainer > .description > .blockList > .blockList > pre" firstOrDie() cleanText()
           // TODO: restructure TypeKind
           Type(id, TypeKind.Trait, detailedSig, comment)
@@ -298,7 +216,7 @@ object JavadocHtmlParser {
           curName = a.attr("name")
         case Tag("ul", ul) if(curName != null)=>
           // first 2 elements is header(method name and signature)
-          val comment = ul / "> li > *:gt(2)" flatMap(ScaladocHtmlParser.extractMarkup(_))
+          val comment = ul / "> li > *:gt(2)" flatMap(extractMarkup(_))
           val id = Id.ChildValue(topId, curName)
           val signature = ul / "> li > pre" firstOrDie() cleanText()
           members += categoryName -> DefinedMethod(id, MethodParams(""), ResultType(""), signature, comment)
@@ -312,5 +230,101 @@ object JavadocHtmlParser {
       }
       members
     }
+  }
+
+  def extractMarkup(elm:Node):Seq[Markup] =
+    HtmlToMarkup.extract(elm)
+}
+
+object HtmlToMarkup {
+  import org.jsoup.nodes.{Document, Element, Node}
+
+  import JsoupExt._
+  import LibGlobal._
+  import scala.collection.JavaConverters._
+
+  def extract(elm:Node):Seq[Markup] =
+    Markup.normalize(extract0(elm))
+
+  def extract0(elm:Node):Seq[Markup] = {
+    import Markup._
+    import org.jsoup.{nodes => n}
+    elm.childNodes.asScala.collect {
+      case c:n.TextNode => Seq(Text(c.cleanText()))
+      case Tag("p", e) =>
+        Seq(Paragraph(extract(e)))
+      case Tag("dl", e) =>
+        extractDlMarkup(e)
+      case Tag("a", e) =>
+        val url = e.attr("href")
+        if(url.startsWith("http:") || url.startsWith("https:") || url.startsWith("//")) {
+          Seq(LinkExternal(e.text(), url))
+        } else {
+          Seq(LinkInternal(e.text(), url))
+        }
+      case Tag("span", e) =>
+        extract0(e)
+      case Tag("br", e) =>
+        Seq(Text("\n"))
+      case Tag("div", e) =>
+        if(e.hasClass("toggleContainer"))
+          Seq()
+        else
+          extract0(e)
+      case Tag("pre", e) =>
+        Seq(Code(e.text()))
+      case Tag("code" | "tt", e) =>
+        Seq(CodeInline(e.text()))
+      case Tag("b" | "em" | "strong", e) =>
+        Seq(Bold(extract(e)))
+      case Tag("i", e) =>
+        Seq(Italic(extract(e)))
+      case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example
+        e / "> li.cmt > p > code" firstOpt() map {oneline =>
+          Seq(Code(oneline.text()))
+        } getOrElse {
+          Seq(Code(e / "> li.cmt > pre" text()))
+        }
+      case Tag("ul", e) =>
+        Seq(UnorderedList(e / "> li" map {li =>ListItem(extract(li))}))
+      case Tag("h4", e) =>
+        Seq(Heading(extract(e)))
+      case Tag("sup", e) =>
+        Seq(Sup(extract(e)))
+      case e:Element => // Treat as text if unknown element
+        unsupportedFeature("markup tag", e.toString)
+        Seq(Text(e.cleanText()))
+    }.flatten
+  }
+
+  def extractDlMarkup(dl:Element):Seq[Markup] = {
+    import org.jsoup.{nodes => n}
+
+    // sometimes insane markup was found. Like <dl> <b> <dt>...</dt> <dd>...</dd> </b> </dl>
+    if((dl / "> b").size > 0)
+      return extractDlMarkup(dl / "> b" firstOrDie())
+
+    var dtPrev:org.jsoup.nodes.Node = null
+    val items = new scala.collection.mutable.ArrayBuffer[Markup.DlItem]
+    val others = new scala.collection.mutable.ArrayBuffer[Markup]
+    dl.childNodes.asScala.foreach {
+      case Tag("dt", dt) =>
+        dtPrev = dt
+      case Tag("dd", dd) =>
+        if(dtPrev != null) {
+          items += Markup.DlItem(extract(dtPrev), extract(dd))
+          dtPrev = null
+        }
+      case Tag("div", div) if(div.hasClass("full-signature-block")) =>
+        // junk
+      case Tag("div", div) if(div.hasClass("block")) =>
+        // code example
+        others ++= extract0(div)
+      case t:n.TextNode =>
+        // just ignore
+      case other =>
+        unsupportedFeature("markup(dl)", other.toString)
+    }
+    return Markup.Dl(items) +: others
   }
 }
