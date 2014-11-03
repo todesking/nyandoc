@@ -11,11 +11,13 @@ So I don't generate document from sources directly, but instead parse HTML and t
 
 ## Usage
 
+Currently, output format fixed to markdown.
+
 ```shell-session
 $ sbt 'run <source-location> <dest-dir>
 ```
 
-`source-location` could be directory(contains html), html file, jar, or zip.
+`source-location` could be directory, html, jar, or zip.
 File type is determined by its extension.
 
 
