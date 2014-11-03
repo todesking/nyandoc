@@ -193,13 +193,9 @@ object ScaladocHtmlParser {
           extractMarkup0(e)
       case Tag("pre", e) =>
         Seq(Code(e.text()))
-      case Tag("code", e) =>
+      case Tag("code" | "tt", e) =>
         Seq(CodeInline(e.text()))
-      case Tag("tt", e) =>
-        Seq(CodeInline(e.text()))
-      case Tag("b", e) =>
-        Seq(Bold(extractMarkup(e)))
-      case Tag("em", e) =>
+      case Tag("b" | "em" | "strong", e) =>
         Seq(Bold(extractMarkup(e)))
       case Tag("i", e) =>
         Seq(Italic(extractMarkup(e)))
