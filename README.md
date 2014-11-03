@@ -26,5 +26,6 @@ File type is determined by its extension.
 * JDK API Documentation
 	* [JDK8](http://www.oracle.com/technetwork/java/javase/documentation/jdk8-doc-downloads-2133158.html)
 	* [JDK7](http://www.oracle.com/technetwork/java/javase/documentation/java-se-7-doc-download-435117.html)
+	* [Japanese document(1.4 - 8)](http://www.oracle.com/technetwork/jp/java/java-sun-1440465-ja.html)
 * Java/Scala library documentation
 	* Jar-packed documents often found in [maven.org](http://search.maven.org)
