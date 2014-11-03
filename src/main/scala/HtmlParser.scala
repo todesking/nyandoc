@@ -249,6 +249,13 @@ object HtmlToMarkup {
   def extract0(elm:Node):Seq[Markup] = {
     import Markup._
     import org.jsoup.{nodes => n}
+
+    elm match {
+      case Tag("dl", e) =>
+        return extractDlMarkup(e)
+      case _ =>
+    }
+
     elm.childNodes.asScala.collect {
       case c:n.TextNode => Seq(Text(c.cleanText()))
       case Tag("p", e) =>
