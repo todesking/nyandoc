@@ -72,9 +72,6 @@ class Layout(optimalWidth:Int, private var indentLevel:Int) {
   def terminateLine():Unit = {
     if(hasCurrentLineContent) {
       newLine()
-    } else {
-      if(lines.nonEmpty && lines.last.isEmpty)
-        lines = lines.dropRight(1)
     }
   }
 
