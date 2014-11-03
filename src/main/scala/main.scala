@@ -32,9 +32,9 @@ object Main {
     } else if(file.getName.endsWith(".html")){
       println(s"Processing: ${file}")
       HtmlParser.parse(file).toSeq
-    } else if(file.getName.endsWith(".jar")) {
+    } else if(file.getName.endsWith(".jar") || file.getName.endsWith(".zip")) {
       println(s"Processing: ${file}")
-      parseJar(file)
+      parseZip(file)
     } else {
       println(s"WARN: Unknown filetype: $file")
       Seq()
@@ -45,17 +45,17 @@ object Main {
     HtmlParser.parse(file)
   }
 
-  def parseJar(file:File):Seq[HtmlParser.Result] = {
-    import java.util.jar._
+  def parseZip(file:File):Seq[HtmlParser.Result] = {
+    import java.util.zip._
     import java.io._
     import IOExt._
 
-    val jis = new JarInputStream(new FileInputStream(file))
+    val jis = new ZipInputStream(new FileInputStream(file))
     val reader = new BufferedReader(new InputStreamReader(jis))
     val results = scala.collection.mutable.ArrayBuffer.empty[HtmlParser.Result]
     try {
-      var entry:JarEntry = null
-      while({entry = jis.getNextJarEntry(); entry != null}) {
+      var entry:ZipEntry = null
+      while({entry = jis.getNextEntry(); entry != null}) {
         println(s"ENTRY: ${entry.getName}")
         if(entry.getName.endsWith(".html")) {
           results ++= HtmlParser.parse(jis.readAll()).toSeq
