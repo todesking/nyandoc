@@ -8,6 +8,17 @@
 But Scaladoc only support to generate HTML. "doclet" feature is provided, but it is very restricted and difficult to understand.
 So I don't generate document from sources directly, but instead parse HTML and transform it.
 
+## Current status
+
+* Basic features are supported
+	* Parse scaladoc to internal representation
+	* Parse javadoc to internal representation
+	* Generate markdown documents from internal representation
+* Not supported yet
+	* Other output format
+	* Old-format javadoc input
+	* Some html tags (ol, blockquote, table, image)
+	* Text layout engine is not support for fullwidth characters.
 
 ## Usage
 
