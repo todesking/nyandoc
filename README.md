@@ -42,3 +42,35 @@ File type is determined by its extension.
 	* [Japanese document(1.4 - 8)](http://www.oracle.com/technetwork/jp/java/java-sun-1440465-ja.html)
 * Java/Scala library documentation
 	* Jar-packed documents often found in [maven.org](http://search.maven.org)
+
+## Example usage: Use Vim as document browser
+
+I used these technologies:
+
+* Vim - THE text editor
+* [unite.vim](https://github.com/Shougo/unite.vim) - Multi-purpose "filter and select" plugin
+  like [ctrlp.vim](https://github.com/kien/ctrlp.vim) or [anything.el](http://www.emacswiki.org/Anything).
+* [unite-outline](https://github.com/Shougo/unite-outline) - Gather outline information from several file types for unite.vim.
+
+At first,
+```vim
+:Unite file:.dox/ -default-action=rec
+```
+
+![select-document-type](http://gyazo.todesking.com/081766c99138daccd741f3656860f637.png)
+
+and select `scala-2.11.2`
+
+![select-document](http://gyazo.todesking.com/081766c99138daccd741f3656860f637.png)
+
+and select `immutable/Seq.md`
+
+![view-document](http://gyazo.todesking.com/0ffb76891bab32d34412a3d961279e72.png)
+
+
+and
+```vim
+:Unite outline
+```
+
+![view-document-outline](http://gyazo.todesking.com/70f1cb0bf27c18c1facd4ab9198ea9ac.png)
