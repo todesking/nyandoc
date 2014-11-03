@@ -1,4 +1,4 @@
-# Dox: scaladoc HTML parser
+# Dox: scaladoc/javadoc HTML parser
 
 ## About
 
