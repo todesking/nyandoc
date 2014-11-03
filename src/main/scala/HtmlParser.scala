@@ -286,7 +286,7 @@ object HtmlToMarkup {
         Seq(Bold(extract(e)))
       case Tag("i", e) =>
         Seq(Italic(extract(e)))
-      case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example
+      case Tag("ol", e) if((e / "> li.cmt").size > 0) => // code example in scaladoc
         e / "> li.cmt > p > code" firstOpt() map {oneline =>
           Seq(Code(oneline.text()))
         } getOrElse {
