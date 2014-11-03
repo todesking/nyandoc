@@ -94,7 +94,7 @@ object ScaladocHtmlParser {
 
   def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
     doc / "#allMembers > div" flatMap {catElm =>
-      val categoryName = catElm / "> h3" first() cleanText()
+      val categoryName = catElm / "> h3" firstOrDie() cleanText()
       if(categoryName == "Shadowed Implicit Value Members")
         Seq()
       else

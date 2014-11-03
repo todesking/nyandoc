@@ -36,7 +36,7 @@ object Main {
       println(s"Processing: ${file}")
       parseZip(file)
     } else {
-      println(s"WARN: Unknown filetype: $file")
+      println(s"Skip: $file")
       Seq()
     }
   }
@@ -56,8 +56,8 @@ object Main {
     try {
       var entry:ZipEntry = null
       while({entry = jis.getNextEntry(); entry != null}) {
-        println(s"ENTRY: ${entry.getName}")
         if(entry.getName.endsWith(".html")) {
+          println(s"Processing: ${entry.getName}")
           results ++= HtmlParser.parse(jis.readAll()).toSeq
         }
       }

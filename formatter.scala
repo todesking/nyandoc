@@ -281,7 +281,7 @@ class MarkdownFormatter {
         renderer.h2bar(categoryName)
         children.foreach {child =>
           renderer.layout.requireEmptyLines(2)
-          renderer.h(3, fill = true, centering = false)(child.signature)
+          renderer.h(3, fill = true, centering = false)(s"`${child.signature}`")
           renderer.render(child.comment)
 
           child match {
