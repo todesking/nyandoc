@@ -185,7 +185,9 @@ object JavadocHtmlParser {
   def extractToplevelItem(doc:Document):Option[Item] = {
     for {
      _ <- doc / ".details" firstOpt()
-     ns <- doc / ".header > .subtitle" firstOpt() map(_.cleanText().split("""\."""))
+     // compact classes has two subtitle: First one like "compact1, compact2, compact3"
+     // Second subtitle is namespace.
+     ns <- doc / ".header > .subtitle" lastOpt() map(_.cleanText().split("""\."""))
      sig <- doc / ".header > .title" firstOpt() map(_.cleanText())
     } yield {
       val nsId = ns.foldLeft[Id](Id.Root) {(parent, name) => Id.ChildValue(parent, name)}
