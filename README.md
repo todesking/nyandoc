@@ -50,7 +50,7 @@ I used these technologies:
 * Vim - THE text editor
 * [unite.vim](https://github.com/Shougo/unite.vim) - Multi-purpose "filter and select" plugin
   like [ctrlp.vim](https://github.com/kien/ctrlp.vim) or [anything.el](http://www.emacswiki.org/Anything).
-* [unite-outline](https://github.com/Shougo/unite-outline) - Gather outline information from several file types for unite.vim.
+* [unite-outline](https://github.com/Shougo/unite-outline) - Gather outline information from various file types for unite.vim.
 
 At first,
 ```vim
