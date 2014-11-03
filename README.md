@@ -61,7 +61,7 @@ At first,
 
 and select `scala-2.11.2`
 
-![select-document](http://gyazo.todesking.com/081766c99138daccd741f3656860f637.png)
+![select-document](http://gyazo.todesking.com/d06d318d4699b73a67fd0dad74120bf4.png)
 
 and select `immutable/Seq.md`
 
