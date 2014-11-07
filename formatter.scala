@@ -216,6 +216,16 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
           contents.foreach(render(_))
         }
         layout.requireEmptyLines(1)
+      case Markup.Table(rows) =>
+        layout.requireEmptyLines(1)
+        rows.foreach {row =>
+          row.cols.foreach {col =>
+            layout.appendUnbreakable(" | ")
+            render(col.contents)
+          }
+          layout.terminateLine()
+        }
+        layout.requireEmptyLines(1)
     }
   }
 

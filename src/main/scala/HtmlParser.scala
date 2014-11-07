@@ -316,6 +316,9 @@ class HtmlToMarkup(codeLanguage:String) {
           case _ =>
             Seq(BlockQuote(extract(e)))
         }
+      case Tag("table", e) =>
+        // FIXME: VERY LOW QUALITY RESULT.
+        Seq(Table(e / "tr" map {tr => TableRow(tr / "> td" map {td => TableColumn(extract(td))}) }))
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.toString)
         Seq(Text(e.cleanText()))

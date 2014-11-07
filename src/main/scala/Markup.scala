@@ -9,6 +9,9 @@ object Markup {
   case class Code(content:String, language:String) extends Markup
   case class HorizontalLine() extends Markup
   case class BlockQuote(contents: Seq[Markup]) extends Markup
+  case class Table(rows: Seq[TableRow]) extends Markup
+  case class TableRow(cols: Seq[TableColumn])
+  case class TableColumn(contents: Seq[Markup])
 
   // List
   case class Dl(items:Seq[DlItem]) extends Markup
@@ -43,6 +46,7 @@ object Markup {
           case Bold(contents) => Bold(doR(contents))
           case Italic(contents) => Italic(doR(contents))
           case Heading(contents) => Heading(doR(contents))
+          case Table(rows) => Table(rows.map {row => TableRow(row.cols.map {col => TableColumn(doRecursive(f)(col.contents)) }) })
           case other => other
         }
       )
@@ -54,6 +58,7 @@ object Markup {
         case
           Text("")
           | Paragraph(Seq())
+          | Table(Seq())
           | Dl(Seq())
           | UnorderedList(Seq())
           | Code("", _)
