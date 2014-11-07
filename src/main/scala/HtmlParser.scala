@@ -218,7 +218,7 @@ object JavadocHtmlParser {
           curName = a.attr("name")
         case Tag("ul", ul) if(curName != null)=>
           // first 2 elements is header(method name and signature)
-          val comment = ul / "> li > *:gt(2)" flatMap(extractMarkup(_))
+          val comment = ul / "> li > *:gt(1)" flatMap(extractMarkup(_))
           val id = Id.ChildValue(topId, curName)
           val signature = ul / "> li > pre" firstOrDie() cleanText()
           members += categoryName -> DefinedMethod(id, MethodParams(""), ResultType(""), signature, comment)
