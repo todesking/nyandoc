@@ -30,13 +30,14 @@ object Markup {
 
   object Normalize {
     def apply(markups:Seq[Markup]):Seq[Markup] =
-      doRecursive(dropEmpty _ andThen removeEmptyLink andThen textFusion)(markups)
+      doRecursive(dropEmpty _ andThen removeEmptyLink andThen removeMeaninglessHR andThen textFusion)(markups)
 
     def doRecursive(f:Seq[Markup]=>Seq[Markup])(markups:Seq[Markup]):Seq[Markup] = {
       def doR(ms:Seq[Markup]) = doRecursive(f)(ms)
       f(
         markups map {
           case Paragraph(cs) => Paragraph(doRecursive(f)(cs))
+          case BlockQuote(cs) => BlockQuote(doRecursive(f)(cs))
           case Dl(items) => Dl(items map {item => DlItem(doR(item.dt), doR(item.dd))})
           case UnorderedList(items) => UnorderedList(items map {item => ListItem(doR(item.contents))})
           case Bold(contents) => Bold(doR(contents))
@@ -73,10 +74,25 @@ object Markup {
         x
     }
 
-    def textFusion(markups:Seq[Markup]) =
+    def removeMeaninglessHR(markups: Seq[Markup]): Seq[Markup] = {
       if(markups.size < 2) markups
       else {
-        val tail = normalize(markups.tail)
+        (markups.head +: removeMeaninglessHR(markups.tail)).toList match {
+          case HorizontalLine() :: HorizontalLine() :: xs =>
+            HorizontalLine() +: xs
+          case HorizontalLine() :: (code@Code(_, _)) :: HorizontalLine() :: xs =>
+            code +: xs
+          case xs =>
+            xs
+        }
+
+      }
+    }
+
+    def textFusion(markups:Seq[Markup]): Seq[Markup] =
+      if(markups.size < 2) markups
+      else {
+        val tail = textFusion(markups.tail)
         (markups.head, tail.head) match {
           case (Markup.Text(c1), Markup.Text(c2)) =>
             Markup.Text(c1 + " " + c2) +: tail.tail
