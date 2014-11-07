@@ -188,7 +188,17 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.requireEmptyLines(1)
         items.foreach {item =>
           layout.appendUnbreakable("* ")
-          layout.withIndent(2) {
+          layout.withIndent(3) {
+            renderInline(item.contents)
+          }
+          layout.terminateLine()
+        }
+        layout.requireEmptyLines(1)
+      case Markup.OrderedList(items) =>
+        layout.requireEmptyLines(1)
+        items.zipWithIndex.foreach {case (item, i) =>
+          layout.appendUnbreakable(s"${i + 1}. ")
+          layout.withIndent(3) {
             renderInline(item.contents)
           }
           layout.terminateLine()

@@ -17,6 +17,7 @@ object Markup {
   case class Dl(items:Seq[DlItem]) extends Markup
   case class DlItem(dt:Seq[Markup], dd:Seq[Markup])
   case class UnorderedList(items:Seq[ListItem]) extends Markup
+  case class OrderedList(items:Seq[ListItem]) extends Markup
   case class ListItem(contents:Seq[Markup])
 
   // Inline

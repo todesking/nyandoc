@@ -303,6 +303,8 @@ class HtmlToMarkup(codeLanguage:String) {
         }
       case Tag("ul", e) =>
         Seq(UnorderedList(e / "> li" map {li =>ListItem(extract(li))}))
+      case Tag("ol", e) =>
+        Seq(OrderedList(e / "> li" map {li => ListItem(extract(li))}))
       case Tag("h4", e) =>
         Seq(Heading(extract(e)))
       case Tag("sup", e) =>
