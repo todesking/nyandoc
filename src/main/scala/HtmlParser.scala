@@ -305,7 +305,7 @@ class HtmlToMarkup(codeLanguage:String) {
         Seq(UnorderedList(e / "> li" map {li =>ListItem(extract(li))}))
       case Tag("ol", e) =>
         Seq(OrderedList(e / "> li" map {li => ListItem(extract(li))}))
-      case Tag("h4", e) =>
+      case Tag("h2" | "h3" | "h4" | "h5" | "h6", e) =>
         Seq(Heading(extract(e)))
       case Tag("sup", e) =>
         Seq(Sup(extract(e)))
