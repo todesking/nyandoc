@@ -205,6 +205,10 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         renderInline(contents)
         layout.cancelSpacing()
         layout.appendUnbreakable("</sup>")
+      case Markup.HorizontalLine() =>
+        layout.requireEmptyLines(1)
+        layout.appendUnbreakable(" " + ("*" * (layout.restWidth - 2)))
+        layout.requireEmptyLines(1)
     }
   }
 

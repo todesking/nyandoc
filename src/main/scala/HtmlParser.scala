@@ -305,6 +305,8 @@ class HtmlToMarkup(codeLanguage:String) {
         Seq(Heading(extract(e)))
       case Tag("sup", e) =>
         Seq(Sup(extract(e)))
+      case Tag("hr", _) =>
+        Seq(HorizontalLine())
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.toString)
         Seq(Text(e.cleanText()))
