@@ -94,11 +94,18 @@ object Main {
   }
 
   def destFileOf(dir:java.io.File, id:Id):java.io.File = {
-    id match {
-      case _:Id.Type =>
-        new java.io.File(dir, id.fullName.replaceAll("""\.""", "/") + ".md")
-      case _:Id.Value =>
-        new java.io.File(dir, id.fullName.replaceAll("""\.""", "/") + "$.md")
+    def idToS(id:Id): Seq[String] = id match {
+      case Id.Root =>
+        Seq()
+      case tid: Id.ChildType =>
+        idToS(tid.parentId) ++ Seq(tid.localName)
+      case vid: Id.ChildValue if("""[a-z0-9_]+""".r.pattern.matcher(vid.localName).find()) =>
+        idToS(vid.parentId) ++ Seq(vid.localName)
+      case vid: Id.ChildValue =>
+        idToS(vid.parentId) ++ Seq(vid.localName + "$")
+      case vid: Id.ChildMethod =>
+        idToS(vid.parentId) ++ Seq(vid.localName + "$")
     }
+    new java.io.File(dir, idToS(id).mkString("/") + ".md")
   }
 }
