@@ -307,8 +307,17 @@ class HtmlToMarkup(codeLanguage:String) {
         Seq(OrderedList(e / "> li" map {li => ListItem(extract(li))}))
       case Tag("h2" | "h3" | "h4" | "h5" | "h6", e) =>
         Seq(Heading(extract(e)))
+      case Tag("font", e) =>
+        // Often in javadoc
+        if(e.attr("size") == "-2" && e.text() == "TM")
+          Seq(Text("(TM)"))
+        else
+          extract(e)
       case Tag("sup", e) =>
-        Seq(Sup(extract(e)))
+        if(e.text() == "TM")
+          Seq(Text("(TM)"))
+        else
+          Seq(Sup(extract(e)))
       case Tag("hr", _) =>
         Seq(HorizontalLine())
       case Tag("blockquote", e) =>
