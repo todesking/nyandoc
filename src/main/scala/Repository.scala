@@ -15,6 +15,7 @@ trait Repository {
   def parentOf(item:Item):Option[Item]
   def childrenOf(item:Item):Seq[Item]
   def childrenWithCategory(item:Item):Seq[(Item, String)]
+  def allItems():Seq[Item]
 }
 
 object Repository {
@@ -42,6 +43,9 @@ object Repository {
     }
     id2item.keys.foreach {id => registerId(id)}
     new Repository {
+      override def allItems():Seq[Item] = {
+        id2item.values.toSeq
+      }
       override def topLevelItems():Seq[Item] = {
         id2item.values.filter(isTopLevel(_)).toSeq
       }

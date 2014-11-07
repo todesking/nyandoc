@@ -71,7 +71,7 @@ object Main {
     if(!dest.exists)
       dest.mkdirs()
 
-    repo.topLevelItems.foreach {item =>
+    repo.allItems.filter{item => repo.childrenOf(item).nonEmpty }.foreach {item =>
       generate0(item, repo, dest)
     }
   }
