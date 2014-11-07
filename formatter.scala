@@ -209,6 +209,13 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
         layout.requireEmptyLines(1)
         layout.appendUnbreakable(" " + ("*" * (layout.restWidth - 2)))
         layout.requireEmptyLines(1)
+      case Markup.BlockQuote(contents) =>
+        layout.requireEmptyLines(1)
+        layout.appendUnbreakable("> ")
+        layout.withIndent(2) {
+          contents.foreach(render(_))
+        }
+        layout.requireEmptyLines(1)
     }
   }
 

@@ -307,6 +307,15 @@ class HtmlToMarkup(codeLanguage:String) {
         Seq(Sup(extract(e)))
       case Tag("hr", _) =>
         Seq(HorizontalLine())
+      case Tag("blockquote", e) =>
+        // Sometimes in javadoc, blockquote is used for container of "code example" or something
+        val inner = extract(e)
+        inner match {
+          case code@Seq(Code(_, _)) =>
+            code
+          case _ =>
+            Seq(BlockQuote(extract(e)))
+        }
       case e:Element => // Treat as text if unknown element
         unsupportedFeature("markup tag", e.toString)
         Seq(Text(e.cleanText()))

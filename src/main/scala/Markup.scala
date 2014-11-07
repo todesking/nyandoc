@@ -8,6 +8,7 @@ object Markup {
   case class Paragraph(children:Seq[Markup]) extends Markup
   case class Code(content:String, language:String) extends Markup
   case class HorizontalLine() extends Markup
+  case class BlockQuote(contents: Seq[Markup]) extends Markup
 
   // List
   case class Dl(items:Seq[DlItem]) extends Markup
