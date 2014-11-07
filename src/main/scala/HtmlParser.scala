@@ -271,7 +271,9 @@ class HtmlToMarkup(codeLanguage:String) {
         extractDlMarkup(e)
       case Tag("a", e) =>
         val url = e.attr("href")
-        if(url.startsWith("http:") || url.startsWith("https:") || url.startsWith("//")) {
+        if(url.isEmpty) {
+          extract(e)
+        } else if(url.startsWith("http:") || url.startsWith("https:") || url.startsWith("//")) {
           Seq(LinkExternal(e.text(), url))
         } else {
           Seq(LinkInternal(e.text(), url))
