@@ -28,7 +28,7 @@ object HtmlParser {
   def parse(content:String):Option[Result] = {
     val baseUri = ""
     val doc = Jsoup.parse(content, baseUri)
-    ScaladocHtmlParser.parse(doc) orElse JavadocHtmlParser.parse(doc)
+    ScaladocHtmlParser.parse(doc) orElse JavadocHtmlParser17.parse(doc) orElse JavadocHtmlParser16.parse(doc)
   }
 }
 
@@ -167,7 +167,7 @@ object ScaladocHtmlParser {
     HtmlToMarkup.extract(elm, "scala")
 }
 
-object JavadocHtmlParser {
+object JavadocHtmlParser17 {
   import org.jsoup.Jsoup
   import org.jsoup.nodes.{Document, Element, Node, TextNode}
 
@@ -206,6 +206,83 @@ object JavadocHtmlParser {
           errorUnknown("Javadoc signature", sig)
       }
     }
+  }
+
+  def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
+    doc / ".details > ul.blocklist > li.blockList > ul.blocklist" flatMap {group =>
+      val categoryName = group / "> li > h3" firstOpt() map(_.cleanText()) getOrElse "(default category)"
+      val members = scala.collection.mutable.ArrayBuffer.empty[(String, Item)]
+      var curName:String = null
+      (group / "> li.blockList").firstOrDie().childNodes().asScala.foreach {
+        case Tag("a", a) =>
+          curName = a.attr("name")
+        case Tag("ul", ul) if(curName != null)=>
+          // first 2 elements is header(method name and signature)
+          val comment = ul / "> li > *:gt(1)" flatMap(extractMarkup(_))
+          val id = Id.ChildValue(topId, curName)
+          val signature = ul / "> li > pre" firstOrDie() cleanText()
+          members += categoryName -> DefinedMethod(id, MethodParams(""), ResultType(""), signature, comment)
+          curName = null
+        case Tag("h3", _) =>
+          // ignore
+        case _:TextNode =>
+          // ignore
+        case tag =>
+          unsupportedFeature("member list DOM", tag.toString)
+      }
+      members
+    }
+  }
+
+  def extractMarkup(elm:Node):Seq[Markup] =
+    HtmlToMarkup.extract(elm, "java")
+}
+
+object JavadocHtmlParser16 {
+  import org.jsoup.Jsoup
+  import org.jsoup.nodes.{Document, Element, Node, TextNode}
+
+  import LibGlobal._
+  import JsoupExt._
+  import scala.collection.JavaConverters._
+
+  def parse(doc:Document):Option[HtmlParser.Result] = {
+    for {
+      top <- extractToplevelItem(doc)
+      members = extractMembers(top.id, doc)
+    } yield HtmlParser.Result(top, members)
+  }
+
+  def extractToplevelItem(doc:Document):Option[Item] = {
+    for {
+     ns <- doc / "body > h2 > font" firstOpt() map(_.cleanText().split("""\."""))
+     sig <- doc / "body > h2" firstOpt() map { h2 => h2.childNodes.asScala.collect { case t: TextNode =>  t.cleanText() } mkString("") }
+    } yield {
+      val nsId = ns.foldLeft[Id](Id.Root) {(parent, name) => Id.ChildValue(parent, name)}
+      val sigR = """^(Class|Interface|Enum|Annotation Type)\s+([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)(<.*>)?$""".r
+
+      sig match {
+        case sigR(kind, name, targs) =>
+          val id = Id.ChildType(nsId, name)
+          val comment = extractToplevelComment(doc)
+          val detailedSig = doc / "h2 ~ dl" / "dt > pre" firstOrDie() cleanText()
+          // TODO: restructure TypeKind
+          Type(id, TypeKind.Trait, detailedSig, comment)
+        case _ =>
+          errorUnknown("Javadoc signature", sig)
+      }
+    }
+  }
+
+  def extractToplevelComment(doc: Document): Seq[Markup] = {
+    var result = new scala.collection.mutable.ArrayBuffer[Markup]
+    var node: Node = doc / "h2 ~ hr ~ dl ~ p" firstOrDie()
+
+    while(node != null) {
+      result += Markup.Paragraph(extractMarkup(node))
+      node = node.nextSibling()
+    }
+    Markup.normalize(result)
   }
 
   def extractMembers(topId:Id, doc:Document):Seq[(String, Item)] = {
