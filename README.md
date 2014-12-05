@@ -50,6 +50,23 @@ File type is determined by its extension.
 * Java/Scala library documentation
 	* Jar-packed documents often found in [maven.org](http://search.maven.org)
 
+## Example usage: Use ctags to generate tags file
+
+Add `~/.ctags` to this:
+```
+--langdef=markdown-scala-dox
+--langmap=markdown-scala-dox:.md
+--regex-markdown-scala-dox=/^#+ .*(def|val|var|type)[[:space:]]+([^ (\[]+)/\2/
+```
+
+and
+
+```
+ctags --language=+markdown-scala-dox -R .
+```
+
+in dox document directory.
+
 ## Example usage: Use Vim as document browser
 
 I used these technologies:
