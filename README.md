@@ -1,4 +1,4 @@
-# Dox: scaladoc/javadoc HTML parser / document generator
+# Nyandoc: scaladoc/javadoc HTML parser / document generator
 
 ## tl;dr
 
@@ -54,18 +54,18 @@ File type is determined by its extension.
 
 Add `~/.ctags` to this:
 ```
---langdef=markdown-scala-dox
---langmap=markdown-scala-dox:.md
---regex-markdown-scala-dox=/^#+ .*(def|val|var|type)[[:space:]]+([^ (\[]+)/\2/
+--langdef=markdown-scala-nyandoc
+--langmap=markdown-scala-nyandoc:.md
+--regex-markdown-scala-nyandoc=/^#+ .*(def|val|var|type)[[:space:]]+([^ (\[]+)/\2/
 ```
 
 and
 
 ```
-ctags --language=+markdown-scala-dox -R .
+ctags --language=+markdown-scala-nyandoc -R .
 ```
 
-in dox document directory.
+in nyandoc document directory.
 
 ## Example usage: Use Vim as document browser
 
@@ -78,7 +78,7 @@ I used these technologies:
 
 At first,
 ```vim
-:Unite file:.dox/ -default-action=rec
+:Unite file:.nyandoc/ -default-action=rec
 ```
 
 ![select-document-type](http://gyazo.todesking.com/081766c99138daccd741f3656860f637.png)

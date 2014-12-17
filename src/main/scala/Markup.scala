@@ -1,4 +1,4 @@
-package com.todesking.dox
+package com.todesking.nyandoc
 
 sealed abstract class Markup
 object Markup {

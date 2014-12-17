@@ -1,4 +1,4 @@
-package com.todesking.dox
+package com.todesking.nyandoc
 
 object Crawler {
   def crawl(rootUrl:java.net.URL):Seq[Item] = ???

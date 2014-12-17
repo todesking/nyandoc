@@ -1,4 +1,4 @@
-package com.todesking.dox
+package com.todesking.nyandoc
 
 class Layout(optimalWidth:Int, private var indentLevel:Int) {
   import scala.collection.mutable

@@ -1,4 +1,4 @@
-package com.todesking.dox
+package com.todesking.nyandoc
 
 object JsoupExt {
   import org.jsoup.select.Elements

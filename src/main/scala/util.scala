@@ -1,4 +1,4 @@
-package com.todesking.dox
+package com.todesking.nyandoc
 
 object LibGlobal {
   def errorUnknown(name:String, unk:String) =
