@@ -309,7 +309,27 @@ class MarkdownFormatter {
     renderer.render(Markup.Code(item.signature, "")) // TODO
     renderer.render(item.comment)
 
-    repo.childrenWithCategory(item).
+    val grouped = repo.childrenWithCategory(item).groupBy { case(item, category) =>
+      item match {
+        case c: ViaInheritMethod =>
+          "inherit"
+        case c: ViaImplicitMethod =>
+          "implicit"
+        case _ =>
+          "original"
+      }
+    }
+
+    grouped.get("original").foreach(renderChildren(_, "", renderer))
+    grouped.get("inherit").foreach(renderChildren(_, "(Inherit)", renderer))
+    grouped.get("implicit").foreach(renderChildren(_, "(Implicit)", renderer))
+
+    renderer.layout.toString()
+
+  }
+
+  def renderChildren(childrenWithCategory: Seq[(Item, String)], titleSuffix: String, renderer: Markdown): Unit = {
+    childrenWithCategory.
       groupBy(_._2).
       toSeq.
       sortBy(_._1).
@@ -317,7 +337,7 @@ class MarkdownFormatter {
         (categoryName, group.map(_._1).sortBy(_.id.fullName))
       }.foreach {case (categoryName, children) =>
         renderer.layout.requireEmptyLines(2)
-        renderer.h2bar(categoryName)
+        renderer.h2bar(categoryName + titleSuffix)
         children.foreach {child =>
           child match {
             case c: ViaInheritMethod if inheritanceBlacklist.contains(c.originalId) =>
@@ -341,8 +361,5 @@ class MarkdownFormatter {
           }
         }
       }
-
-    renderer.layout.toString()
-
   }
 }
