@@ -291,6 +291,17 @@ class Markdown(val layout:Layout = new Layout(80, 0)) {
 }
 
 class MarkdownFormatter {
+  val inheritanceBlacklist = Set(
+    "scala.Any",
+    "scala.AnyRef",
+    "scala.Any###"
+  )
+  val implicitBlacklist = Set(
+    "scala.Predef.any2stringadd",
+    "scala.Predef.ArrowAssoc",
+    "scala.Predef.Ensuring",
+    "scala.Predef.StringFormat"
+  )
   def format(item:Item, repo:Repository):String = {
     val renderer = new Markdown()
 
@@ -308,18 +319,25 @@ class MarkdownFormatter {
         renderer.layout.requireEmptyLines(2)
         renderer.h2bar(categoryName)
         children.foreach {child =>
-          renderer.layout.requireEmptyLines(2)
-          renderer.h(3, fill = true, centering = false)(s"`${child.signature}`")
-          renderer.render(child.comment)
-
           child match {
-            case c:ViaImplicitMethod =>
-              renderer.layout.requireEmptyLines(1)
-              renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
-            case c:ViaInheritMethod =>
-              renderer.layout.requireEmptyLines(1)
-              renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
+            case c: ViaInheritMethod if inheritanceBlacklist.contains(c.originalId) =>
+              // ignore
+            case c:ViaImplicitMethod if implicitBlacklist.contains(c.originalId) =>
+              // ignore
             case _ =>
+              renderer.layout.requireEmptyLines(2)
+              renderer.h(3, fill = true, centering = false)(s"`${child.signature}`")
+              renderer.render(child.comment)
+
+              child match {
+                case c:ViaImplicitMethod =>
+                  renderer.layout.requireEmptyLines(1)
+                  renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
+                case c:ViaInheritMethod =>
+                  renderer.layout.requireEmptyLines(1)
+                  renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
+                case _ =>
+              }
           }
         }
       }
