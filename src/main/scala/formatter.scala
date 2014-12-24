@@ -294,7 +294,7 @@ class MarkdownFormatter {
   val inheritanceBlacklist = Set(
     "scala.Any",
     "scala.AnyRef",
-    "scala.Any###"
+    "scala.AnyRef###"
   )
   val implicitBlacklist = Set(
     "scala.Predef.any2stringadd",
@@ -312,20 +312,25 @@ class MarkdownFormatter {
     val grouped = repo.childrenWithCategory(item).groupBy { case(item, category) =>
       item match {
         case c: ViaInheritMethod =>
-          "inherit"
+          if(inheritanceBlacklist.contains(c.originalId))
+            ("ignored", "")
+          else
+            (s"001_inherit: ${c.originalId}", s" From ${c.originalId}")
         case c: ViaImplicitMethod =>
-          "implicit"
+          if(implicitBlacklist.contains(c.originalId))
+            ("ignored", "")
+          else
+            (s"002_implicit: ${c.originalId}", s" From Implicit ${c.originalId}")
         case _ =>
-          "original"
+          ("0000_original", "")
       }
     }
 
-    grouped.get("original").foreach(renderChildren(_, "", renderer))
-    grouped.get("inherit").foreach(renderChildren(_, "(Inherit)", renderer))
-    grouped.get("implicit").foreach(renderChildren(_, "(Implicit)", renderer))
+    grouped.keys.filter(_._1 != "ignored").toSeq.sortBy(_._1).foreach { case key@(_, suffix) =>
+      grouped.get(key).foreach(renderChildren(_, suffix, renderer))
+    }
 
     renderer.layout.toString()
-
   }
 
   def renderChildren(childrenWithCategory: Seq[(Item, String)], titleSuffix: String, renderer: Markdown): Unit = {
@@ -339,25 +344,18 @@ class MarkdownFormatter {
         renderer.layout.requireEmptyLines(2)
         renderer.h2bar(categoryName + titleSuffix)
         children.foreach {child =>
-          child match {
-            case c: ViaInheritMethod if inheritanceBlacklist.contains(c.originalId) =>
-              // ignore
-            case c:ViaImplicitMethod if implicitBlacklist.contains(c.originalId) =>
-              // ignore
-            case _ =>
-              renderer.layout.requireEmptyLines(2)
-              renderer.h(3, fill = true, centering = false)(s"`${child.signature}`")
-              renderer.render(child.comment)
+          renderer.layout.requireEmptyLines(2)
+          renderer.h(3, fill = true, centering = false)(s"`${child.signature}`")
+          renderer.render(child.comment)
 
-              child match {
-                case c:ViaImplicitMethod =>
-                  renderer.layout.requireEmptyLines(1)
-                  renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
-                case c:ViaInheritMethod =>
-                  renderer.layout.requireEmptyLines(1)
-                  renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
-                case _ =>
-              }
+          child match {
+            case c:ViaImplicitMethod =>
+              renderer.layout.requireEmptyLines(1)
+              renderer.layout.appendUnbreakable(s"(added by implicit convertion: ${c.originalId})")
+            case c:ViaInheritMethod =>
+              renderer.layout.requireEmptyLines(1)
+              renderer.layout.appendUnbreakable(s"(defined at ${c.originalId})")
+            case _ =>
           }
         }
       }
