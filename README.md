@@ -62,7 +62,7 @@ Add `~/.ctags` to this:
 and
 
 ```
-ctags --language=+markdown-scala-nyandoc -R .
+ctags --languages=+markdown-scala-nyandoc -R .
 ```
 
 in nyandoc document directory.
