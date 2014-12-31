@@ -5,12 +5,24 @@ object Crawler {
   def crawlLocal(root:java.io.File):Seq[Item] = ???
 }
 
+case class Exit(val code: Int) extends xsbti.Exit
+class Main extends xsbti.AppMain {
+  def run(config: xsbti.AppConfiguration) = {
+    Exit(Main.run(config.arguments))
+  }
+}
+
 object Main {
+  def main(args: Array[String]): Unit = {
+    System.exit(run(args))
+  }
+
   import java.io.File
 
-  def main(args:Array[String]):Unit = {
+  def run(args:Array[String]): Int = {
     if(args.size != 2) {
       println("USAGE: $0 <scaladoc-dir|scaladoc-html> <dest-dir>")
+      1
     } else {
       val src = new File(args(0))
       val dest = new File(args(1))
@@ -20,6 +32,7 @@ object Main {
 
       println(s"generaging documents into ${dest}")
       generate(repo, dest)
+      0
     }
   }
 
