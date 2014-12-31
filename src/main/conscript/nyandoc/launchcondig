@@ -1,0 +1,12 @@
+[app]
+  version: 0.1-SNAPSHOT
+  org: com.todesking
+  name: nyandoc
+  class: com.todesking.nyandoc.Main
+[scala]
+  version: 2.11.4
+[repositories]
+  local
+  scala-tools-releases
+  maven-central
+        
