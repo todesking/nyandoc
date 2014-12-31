@@ -2,7 +2,7 @@ name := "nyandoc"
 
 organization := "com.todesking"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.4"
 
 libraryDependencies ++= Seq(
   "org.jsoup"              %  "jsoup"                     % "1.7.3"
