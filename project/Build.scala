@@ -19,8 +19,8 @@ object ApplicationBuild extends Build {
         """.stripMargin
         val dir = (sourceDirectory in Compile).value / "conscript" / "nyandoc"
         dir.mkdirs()
-        val launchcondig = dir / "launchcondig"
-        IO.write(launchcondig, content)
+        val launchconfig = dir / "launchconfig"
+        IO.write(launchconfig, content)
       }
     )
 }
