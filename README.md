@@ -23,13 +23,29 @@ So I don't generate document from sources directly, but instead parse HTML and t
 	* Generate markdown documents from internal representation
 * Not supported yet
 	* Other output format
-	* Old-format javadoc input
+	* Old-format(Java 1.6 or older) javadoc html
 	* Some html tags (ol, blockquote, table, image)
 	* Text layout engine is not support for fullwidth characters.
+
+## Install
+
+The project is packaged with [Conscript](https://github.com/n8han/conscript).
+
+Install `conscript` first, and
+
+```shell-session
+$ cs install todesking/nyandoc
+```
 
 ## Usage
 
 Currently, output format fixed to markdown.
+
+```shell-session
+$ nyandoc <source-location> <dest-dir>
+```
+
+or
 
 ```shell-session
 $ sbt 'run <source-location> <dest-dir>
@@ -57,12 +73,19 @@ Add `~/.ctags` to this:
 --langdef=markdown-scala-nyandoc
 --langmap=markdown-scala-nyandoc:.md
 --regex-markdown-scala-nyandoc=/^#+ .*(def|val|var|type)[[:space:]]+([^ (\[]+)/\2/
+--languages=-markdown-scala-nyandoc
+
+--langdef=markdown-java-nyandoc
+--langmap=markdown-java-nyandoc:.md
+--regex-markdown-java-nyandoc=/^#+ .*[[:space:]]([a-zA-Z0-9]+(<.+>)?)\(/\1/
+--languages=-markdown-java-nyandoc
 ```
 
 and
 
-```
-ctags --languages=+markdown-scala-nyandoc -R .
+```shell-session
+ctags --languages=+markdown-scala-nyandoc -R . # For Scala project
+ctags --languages=+markdown-java-nyandoc -R .  # For Java project
 ```
 
 in nyandoc document directory.
