@@ -306,7 +306,7 @@ class MarkdownFormatter {
     val renderer = new Markdown()
 
     renderer.h(1, fill = true, centering = true)(item.id.fullName)
-    renderer.render(Markup.Code(item.signature, "")) // TODO
+    renderer.render(Markup.Code(item.signature, item.language))
     renderer.render(item.comment)
 
     val grouped = repo.childrenWithCategory(item).groupBy { case(item, category) =>

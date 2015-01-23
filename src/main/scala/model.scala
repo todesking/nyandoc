@@ -139,13 +139,15 @@ case class MethodParams(signature:String)
 case class ResultType(signature:String)
 
 sealed abstract class Item(val id:Id, val comment:Seq[Markup]) {
+  def language: String
   def signature:String = id.localName
 }
 
-sealed class Value(id:Id.Value, comment:Seq[Markup]) extends Item(id, comment)
+sealed abstract class Value(id:Id.Value, comment:Seq[Markup]) extends Item(id, comment)
 
 case class Type(
   override val id:Id.Type,
+  override val language: String,
   kind:TypeKind,
   override val signature:String,
   override val comment:Seq[Markup]
@@ -153,6 +155,7 @@ case class Type(
 
 case class Object(
   override val id:Id.Value,
+  override val language: String,
   override val signature:String,
   override val comment:Seq[Markup]
 ) extends Value(id, comment)
@@ -167,6 +170,7 @@ abstract class Method(
 
 case class DefinedMethod(
   override val id:Id.Value,
+  override val language: String,
   params:MethodParams,
   resultType:ResultType,
   override val signature:String,
@@ -175,6 +179,7 @@ case class DefinedMethod(
 
 case class ViaImplicitMethod(
   override val id:Id.Value,
+  override val language: String,
   params:MethodParams,
   resultType:ResultType,
   override val signature:String,
@@ -184,6 +189,7 @@ case class ViaImplicitMethod(
 
 case class ViaInheritMethod(
   override val id:Id.Value,
+  override val language: String,
   params:MethodParams,
   resultType:ResultType,
   override val signature:String,
@@ -193,6 +199,7 @@ case class ViaInheritMethod(
 
 case class Package(
   override val id:Id.Value,
+  override val language: String,
   override val signature:String,
   override val comment:Seq[Markup]
 ) extends Value(id, comment)

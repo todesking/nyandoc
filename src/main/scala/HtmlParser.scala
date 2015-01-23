@@ -40,6 +40,8 @@ object ScaladocHtmlParser {
   import JsoupExt._
   import scala.collection.JavaConverters._
 
+  val languageName = "scala"
+
   def parse(doc:Document):Option[HtmlParser.Result] = {
     for {
       top <- extractToplevelItem(doc)
@@ -56,13 +58,13 @@ object ScaladocHtmlParser {
       val comment = doc / "#comment" firstOpt() map(extractMarkup(_)) getOrElse Seq()
       id match {
         case tid:Id.Type =>
-          Type(tid, TypeKind.forName(kind), signature, comment)
+          Type(tid, languageName, TypeKind.forName(kind), signature, comment)
         case vid:Id.Value =>
           kind match {
             case "object" =>
-              Object(vid, signature, comment)
+              Object(vid, languageName, signature, comment)
             case "package" =>
-              Package(vid, signature, comment)
+              Package(vid, languageName, signature, comment)
             case unk => errorUnknown("Value member kind", unk)
           }
       }
@@ -116,7 +118,7 @@ object ScaladocHtmlParser {
 
     id match {
       case tid:Id.Type =>
-        Type(tid, TypeKind.forName(kind), signature, comment)
+        Type(tid, languageName, TypeKind.forName(kind), signature, comment)
       case vid:Id.Value =>
         kind match {
           case "def" | "val" | "var" | "lazy val" | "new" =>
@@ -129,18 +131,18 @@ object ScaladocHtmlParser {
             val permaLink = elm / "> .permalink > a" firstOpt() map(_.attr("href"))
 
             if(permaLink.isEmpty)
-              DefinedMethod(fullId, params, resultType, signature, comment)
+              DefinedMethod(fullId, languageName, params, resultType, signature, comment)
             else {
               val realId = elm.attr("name").replaceAll("""#[^#.]+$""", "")
               if((elm / ".signature > .symbol > .implicit").nonEmpty)
-                ViaImplicitMethod(fullId, params, resultType, signature, realId, comment)
+                ViaImplicitMethod(fullId, languageName, params, resultType, signature, realId, comment)
               else
-                ViaInheritMethod(fullId, params, resultType, signature, realId, comment)
+                ViaInheritMethod(fullId, languageName, params, resultType, signature, realId, comment)
             }
             case "object" =>
-              Object(vid, signature, comment)
+              Object(vid, languageName, signature, comment)
             case "package" =>
-              Package(vid, signature, comment)
+              Package(vid, languageName, signature, comment)
         }
     }
   }
@@ -175,6 +177,8 @@ object JavadocHtmlParser17 {
   import JsoupExt._
   import scala.collection.JavaConverters._
 
+  val languageName = "java"
+
   def parse(doc:Document):Option[HtmlParser.Result] = {
     for {
       top <- extractToplevelItem(doc)
@@ -201,7 +205,7 @@ object JavadocHtmlParser17 {
             doc / ".contentContainer > .description > .blockList > .blockList > .block" firstOpt() map(extractMarkup(_)) getOrElse Seq()
           val detailedSig = doc / ".contentContainer > .description > .blockList > .blockList > pre" firstOrDie() cleanText()
           // TODO: restructure TypeKind
-          Type(id, TypeKind.Trait, detailedSig, comment)
+          Type(id, languageName, TypeKind.Trait, detailedSig, comment)
         case _ =>
           errorUnknown("Javadoc signature", sig)
       }
@@ -221,7 +225,7 @@ object JavadocHtmlParser17 {
           val comment = ul / "> li > *:gt(1)" flatMap(extractMarkup(_))
           val id = Id.ChildValue(topId, curName)
           val signature = ul / "> li > pre" firstOrDie() cleanText()
-          members += categoryName -> DefinedMethod(id, MethodParams(""), ResultType(""), signature, comment)
+          members += categoryName -> DefinedMethod(id, languageName, MethodParams(""), ResultType(""), signature, comment)
           curName = null
         case Tag("h3", _) =>
           // ignore
@@ -235,7 +239,7 @@ object JavadocHtmlParser17 {
   }
 
   def extractMarkup(elm:Node):Seq[Markup] =
-    HtmlToMarkup.extract(elm, "java")
+    HtmlToMarkup.extract(elm, languageName)
 }
 
 object JavadocHtmlParser16 {
@@ -245,6 +249,8 @@ object JavadocHtmlParser16 {
   import LibGlobal._
   import JsoupExt._
   import scala.collection.JavaConverters._
+
+  val languageName = "java"
 
   def parse(doc:Document):Option[HtmlParser.Result] = {
     for {
@@ -267,7 +273,7 @@ object JavadocHtmlParser16 {
           val comment = extractToplevelComment(doc)
           val detailedSig = doc / "h2 ~ dl" / "dt > pre" firstOrDie() cleanText()
           // TODO: restructure TypeKind
-          Type(id, TypeKind.Trait, detailedSig, comment)
+          Type(id, languageName, TypeKind.Trait, detailedSig, comment)
         case _ =>
           errorUnknown("Javadoc signature", sig)
       }
@@ -298,7 +304,7 @@ object JavadocHtmlParser16 {
           val comment = ul / "> li > *:gt(1)" flatMap(extractMarkup(_))
           val id = Id.ChildValue(topId, curName)
           val signature = ul / "> li > pre" firstOrDie() cleanText()
-          members += categoryName -> DefinedMethod(id, MethodParams(""), ResultType(""), signature, comment)
+          members += categoryName -> DefinedMethod(id, languageName, MethodParams(""), ResultType(""), signature, comment)
           curName = null
         case Tag("h3", _) =>
           // ignore
@@ -312,7 +318,7 @@ object JavadocHtmlParser16 {
   }
 
   def extractMarkup(elm:Node):Seq[Markup] =
-    HtmlToMarkup.extract(elm, "java")
+    HtmlToMarkup.extract(elm, languageName)
 }
 
 object HtmlToMarkup {

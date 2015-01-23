@@ -117,6 +117,6 @@ object Main {
       case vid: Id.ChildMethod =>
         idToS(vid.parentId) :+ vid.localName
     }
-    new java.io.File(dir, idToS(item.id).mkString("/") + (item match { case Object(_, _, _) => "$.md" case _ => ".md"}))
+    new java.io.File(dir, idToS(item.id).mkString("/") + (item match { case _: Object => "$.md" case _ => ".md"}))
   }
 }
