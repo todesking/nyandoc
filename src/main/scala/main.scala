@@ -93,7 +93,7 @@ object Main {
     val content = new MarkdownFormatter().format(top, repo)
 
     import java.io._
-    val dest:File = destFileOf(destDir, top.id)
+    val dest:File = destFileOf(destDir, top)
 
     println(s"Generating ${dest}")
     dest.getParentFile.mkdirs()
@@ -106,19 +106,17 @@ object Main {
     }
   }
 
-  def destFileOf(dir:java.io.File, id:Id):java.io.File = {
+  def destFileOf(dir:java.io.File, item: Item):java.io.File = {
     def idToS(id:Id): Seq[String] = id match {
       case Id.Root =>
         Seq()
       case tid: Id.ChildType =>
         idToS(tid.parentId) ++ Seq(tid.localName)
-      case vid: Id.ChildValue if("""[a-z0-9_]+""".r.pattern.matcher(vid.localName).find()) =>
-        idToS(vid.parentId) ++ Seq(vid.localName)
       case vid: Id.ChildValue =>
-        idToS(vid.parentId) ++ Seq(vid.localName + "$")
+        idToS(vid.parentId) :+ vid.localName
       case vid: Id.ChildMethod =>
-        idToS(vid.parentId) ++ Seq(vid.localName + "$")
+        idToS(vid.parentId) :+ vid.localName
     }
-    new java.io.File(dir, idToS(id).mkString("/") + ".md")
+    new java.io.File(dir, idToS(item.id).mkString("/") + (item match { case Object(_, _, _) => "$.md" case _ => ".md"}))
   }
 }
