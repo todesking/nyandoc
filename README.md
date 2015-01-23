@@ -71,21 +71,17 @@ File type is determined by its extension.
 Add `~/.ctags` to this:
 ```
 --langdef=markdown-scala-nyandoc
---langmap=markdown-scala-nyandoc:.md
 --regex-markdown-scala-nyandoc=/^#+ .*(def|val|var|type)[[:space:]]+([^ (\[]+)/\2/
---languages=-markdown-scala-nyandoc
 
 --langdef=markdown-java-nyandoc
---langmap=markdown-java-nyandoc:.md
 --regex-markdown-java-nyandoc=/^#+ .*[[:space:]]([a-zA-Z0-9]+(<.+>)?)\(/\1/
---languages=-markdown-java-nyandoc
 ```
 
 and
 
 ```shell-session
-ctags --languages=+markdown-scala-nyandoc -R . # For Scala project
-ctags --languages=+markdown-java-nyandoc -R .  # For Java project
+ctags --langmap=markdown-scala-nyandoc:.md -R . # For Scala project
+ctags --langmap=markdown-java-nyandoc:.md -R .  # For Java project
 ```
 
 in nyandoc document directory.
