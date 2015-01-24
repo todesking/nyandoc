@@ -1,5 +1,7 @@
 # Nyandoc: scaladoc/javadoc HTML parser / document generator
 
+[日本語の解説を書きました](http://www.todesking.com/blog/2015-01-24-markdown-converter-for-javadoc-and-scaladoc/)
+
 ## tl;dr
 
 * This software can convert javadoc/scaladoc html to markdown format.
