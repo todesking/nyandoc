@@ -58,7 +58,7 @@ File type is determined by its extension.
 ## Links
 
 * Scala API Documentation
-	* [2.11.4](http://scala-lang.org/download/2.11.4.html)
+	* [2.11.5](http://scala-lang.org/download/2.11.5.html)
 * JDK API Documentation
 	* [JDK8](http://www.oracle.com/technetwork/java/javase/documentation/jdk8-doc-downloads-2133158.html)
 	* [JDK7](http://www.oracle.com/technetwork/java/javase/documentation/java-se-7-doc-download-435117.html)
