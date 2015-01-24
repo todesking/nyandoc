@@ -6,6 +6,9 @@
 * Text-editor friendly!
 * Under development, but basically works.
 
+## Pre-build documents
+
+* Scala API documentation(scala-library): http://todesking.github.io/nyandoc/scala-docs-markdown-2.11.5.zip
 
 ## About
 
