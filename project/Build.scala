@@ -16,6 +16,7 @@ object ApplicationBuild extends Build {
         |  local
         |  scala-tools-releases
         |  maven-central
+        |  todesking: http://todesking.github.io/mvn/
         """.stripMargin
         val dir = (sourceDirectory in Compile).value / "conscript" / "nyandoc"
         dir.mkdirs()
