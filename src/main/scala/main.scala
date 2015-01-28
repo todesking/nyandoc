@@ -151,7 +151,10 @@ object Main {
   }
 
   def run(args:Array[String]): Int = {
-    if(args.size == 3 && args(0) == "--maven") {
+    if(args.nonEmpty && args(0) == "--version") {
+      println(s"Nyandoc ${Version.string}")
+      0
+    } else if(args.size == 3 && args(0) == "--maven") {
       val dest = new File(args(2))
       val artifacts = Maven.findArtifacts(args(1))
       if(artifacts.isEmpty) {
