@@ -1,5 +1,5 @@
 [app]
-  version: 0.0.1
+  version: 0.0.2
   org: com.todesking
   name: nyandoc
   class: com.todesking.nyandoc.Main
@@ -9,4 +9,5 @@
   local
   scala-tools-releases
   maven-central
-
+  todesking: http://todesking.github.io/mvn/
+        
