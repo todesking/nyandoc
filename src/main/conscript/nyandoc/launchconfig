@@ -1,5 +1,5 @@
 [app]
-  version: 0.0.2
+  version: 0.0.3
   org: com.todesking
   name: nyandoc
   class: com.todesking.nyandoc.Main

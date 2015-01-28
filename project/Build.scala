@@ -4,7 +4,7 @@ import sbt.Keys._
 object ApplicationBuild extends Build {
   val generateConscript = Def.task {
     val content = s"""[app]
-      |  version: ${version.value}
+      |  version: ${version.value.replaceAll("\\+$", "")}
       |  org: ${organization.value}
       |  name: ${name.value}
       |  class: com.todesking.nyandoc.Main
