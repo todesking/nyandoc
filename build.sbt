@@ -2,7 +2,7 @@ organization := "com.todesking"
 
 name := "nyandoc"
 
-version := "0.0.2"
+version := "0.0.2-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 
