@@ -15,6 +15,15 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
-scalacOptions in (Compile, doc) ++= Seq("-groups", "-implicits")
+sourceGenerators in Compile <+= (sourceManaged in Compile, version) map { (dir, v) =>
+  val file = dir / "Version.scala"
+  IO.write(file, s"""package com.todesking.nyandoc
+    |object Version {
+    |  val string = "${v}"
+    |}""".stripMargin)
+  Seq(file)
+}
+
+compile <<= (compile in Compile) dependsOn generateConscript
 
 seq(conscriptSettings :_*)
