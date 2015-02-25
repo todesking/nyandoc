@@ -18,7 +18,7 @@ object Maven {
         case None => "None".tapp(); self
       }
   }
-  def findArtifacts(id: String): Seq[MavenArtifact] = {
+  def findArtifacts(id: String, rows: Int): Seq[MavenArtifact] = {
     import org.json4s._
     import org.json4s.native.JsonMethods._
 
@@ -31,7 +31,7 @@ object Maven {
       }
     println(s"Query: $queryS")
 
-    val data = query("rows" -> "20", "wt" -> "json", "core" -> "gav", "q" -> queryS)
+    val data = query("rows" -> rows.toString, "wt" -> "json", "core" -> "gav", "q" -> queryS)
     val result = for {
       JObject(o) <- Some(data)
       JObject(response) <- o.toMap.get("response")
@@ -128,7 +128,7 @@ object Main {
 
   import java.io.File
 
-  def selectArtifact(artifacts: Seq[MavenArtifact]): MavenArtifact = {
+  def selectArtifact(artifacts: Seq[MavenArtifact], rows: Int): MavenArtifact = {
     val range = 0 until artifacts.size
     def readIntO(): Option[Int] = {
       try {
@@ -144,38 +144,56 @@ object Main {
     def readNum(): Int = {
       readNumO() getOrElse readNum()
     }
-    artifacts.zipWithIndex.foreach { case (a, i) =>
+    printArtifacts(artifacts, rows)
+    artifacts(readNum())
+  }
+
+  def printArtifacts(artifacts: Seq[MavenArtifact], rows: Int): Unit = {
+    artifacts.take(rows).zipWithIndex.foreach { case (a, i) =>
       println(s"${i}) ${a.id}")
     }
-    artifacts(readNum())
+    if(rows < artifacts.size) {
+      println(s" ... and more")
+    }
   }
 
   def run(args:Array[String]): Int = {
     if(args.nonEmpty && args(0) == "--version") {
       println(s"Nyandoc ${Version.string}")
       0
-    } else if(args.size == 3 && args(0) == "--maven") {
-      val dest = new File(args(2))
-      val artifacts = Maven.findArtifacts(args(1))
-      if(artifacts.isEmpty) {
-        println(s"[ERROR] Artifact not found in maven.org: ${args(1)}")
-        println(s"[ERROR]   Tip: Use * to wildcard search")
-        1
-      } else {
-        val artifact =
-          if(artifacts.size > 1)
-            selectArtifact(artifacts)
-          else
-            artifacts.head
-        println(s"Downloading ${artifact.id} from ${artifact.javadocUri}")
-        Http.download(artifact.javadocUri) match {
-          case Left(error) =>
-            println(s"Download failed: ${error.toString}")
-            1
-          case Right(file) =>
-            generate(Repository(parse(file)), dest)
-            0
+    } else if(args(0) == "--maven" && args.size >= 2) {
+      val rows = 20
+      val query = args(1)
+      val artifacts = Maven.findArtifacts(args(1), rows + 1)
+      if(args.size == 3) {
+        val dest = new File(args(2))
+        if(artifacts.isEmpty) {
+          println(s"[ERROR] Artifact not found in maven.org: ${args(1)}")
+          println(s"[ERROR]   Tip: Use * to wildcard search")
+          1
+        } else {
+          val artifact =
+            if(artifacts.size > 1)
+              selectArtifact(artifacts, rows)
+            else
+              artifacts.head
+          println(s"Downloading ${artifact.id} from ${artifact.javadocUri}")
+          Http.download(artifact.javadocUri) match {
+            case Left(error) =>
+              println(s"Download failed: ${error.toString}")
+              1
+            case Right(file) =>
+              generate(Repository(parse(file)), dest)
+              0
+          }
         }
+      } else {
+        printArtifacts(artifacts, rows)
+        if(artifacts.isEmpty) {
+          println("No artifacts found.")
+          println(s"Tip: Use * to wildcard search")
+        }
+        0
       }
     } else if(args.size == 2) {
       val src = new File(args(0))
@@ -189,10 +207,14 @@ object Main {
       0
     } else {
       println(
-        """USAGE: nyandoc <source> <dest-dir>
-          |  <source>: dir | jar | zip
-          |   OR: nyandoc --maven <mvn_id> <dest-dir>
-          |  <mvn_id>: <group_id>:<artifact_id>(:<version>)
+        """USAGE:
+          |  nyandoc <source> <dest-dir>
+          |    <source>: dir | jar | zip
+          |
+          |  nyandoc --maven <mvn_id> [<dest-dir>]
+          |    <mvn_id>: <group_id>:<artifact_id>(:<version>)
+          |      `*` for wildcard search(ex.: `org.scala-lang:scala-*`)
+          |    If <dest-dir> not supplied, search only.
         """.stripMargin
       )
       1
